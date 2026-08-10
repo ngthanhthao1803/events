@@ -108,33 +108,30 @@ const EventMeta = styled.p`
 `;
 
 const StatsGrid = styled.div`
-  margin-top: 1.25rem;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1rem;
+  display: flex;
   gap: 0.75rem;
-
-  @media (max-width: 720px) {
-    grid-template-columns: 1fr;
-  }
+  flex-wrap: wrap;
 `;
 
 const StatCard = styled.div`
-  border-radius: 18px;
-  padding: 1rem 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  padding: 0.5rem 0.8rem;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
 `;
 
-const StatLabel = styled.div`
+const StatLabel = styled.span`
   color: rgba(255, 255, 255, 0.66);
-  font-size: 0.84rem;
-  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
 `;
 
-const StatValue = styled.div`
-  font-size: 1.55rem;
+const StatValue = styled.span`
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
 `;
 
 const Panel = styled.section`
@@ -158,6 +155,27 @@ const SectionTitle = styled.h3`
   margin: 0;
   font-size: 1.05rem;
   letter-spacing: -0.02em;
+`;
+
+const IconButton = styled.button`
+  background: rgba(11, 185, 194, 0.15);
+  color: #0ab9c2;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(11, 185, 194, 0.3);
+    transform: scale(1.05);
+  }
 `;
 
 const MutedText = styled.p`
@@ -287,7 +305,7 @@ const StatusPill = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  margin-top: 0.7rem;
+  margin: 0;
   padding: 0.38rem 0.7rem;
   border-radius: 999px;
   font-size: 0.88rem;
@@ -320,7 +338,7 @@ const ToolRow = styled.div`
 `;
 
 const GhostButton = styled(SecondaryButton)`
-  padding: 0.6rem 0.85rem;
+  padding: 0.6rem 0.65rem;
   font-size: 0.88rem;
 `;
 
@@ -330,6 +348,7 @@ export default function EventDetail() {
   const [guests, setGuests] = useState([]);
   const [newGuest, setNewGuest] = useState({ name: "", email: "" });
   const [scanning, setScanning] = useState(false);
+  const [showAddGuest, setShowAddGuest] = useState(false);
   const [socket, setSocket] = useState(null);
 
   const fetchEvent = async () => {
@@ -438,56 +457,58 @@ export default function EventDetail() {
             </Hero>
 
             <Panel>
-              <SectionHeader>
+              <SectionHeader style={{ marginBottom: "0.75rem" }}>
                 <div>
-                  <SectionTitle>Thêm khách mời</SectionTitle>
-                  <MutedText>
-                    Điền tên và email nếu có, hệ thống sẽ tạo link QR tự động.
-                  </MutedText>
+                  <SectionTitle>Quét QR Check-in</SectionTitle>
                 </div>
+                <SecondaryButton
+                  type="button"
+                  onClick={() => setScanning((s) => !s)}
+                >
+                  {scanning ? "Hủy quét" : "Mở quét QR"}
+                </SecondaryButton>
               </SectionHeader>
-
-              <FormGrid onSubmit={addGuest}>
-                <Field
-                  placeholder="Tên khách"
-                  value={newGuest.name}
-                  onChange={(e) =>
-                    setNewGuest({ ...newGuest, name: e.target.value })
-                  }
-                  required
-                />
-                <Field
-                  placeholder="Email (không bắt buộc)"
-                  value={newGuest.email}
-                  onChange={(e) =>
-                    setNewGuest({ ...newGuest, email: e.target.value })
-                  }
-                />
-                <PrimaryButton type="submit">Thêm khách</PrimaryButton>
-              </FormGrid>
-
-              <ScannerWrap>
-                <SectionHeader style={{ marginBottom: "0.75rem" }}>
-                  <div>
-                    <SectionTitle>Quét QR</SectionTitle>
-                  </div>
-                  <SecondaryButton
-                    type="button"
-                    onClick={() => setScanning((s) => !s)}
-                  >
-                    {scanning ? "Hủy quét" : "Mở quét QR"}
-                  </SecondaryButton>
-                </SectionHeader>
-                {scanning && <QRScanner onScan={handleScan} />}
-              </ScannerWrap>
+              {scanning && <QRScanner onScan={handleScan} />}
             </Panel>
 
             <Panel>
               <SectionHeader>
                 <div>
-                  <SectionTitle>Khách mời</SectionTitle>
+                  <SectionTitle>Danh sách khách mời</SectionTitle>
                 </div>
+                <IconButton type="button" onClick={() => setShowAddGuest(!showAddGuest)}>
+                  {showAddGuest ? "−" : "+"}
+                </IconButton>
               </SectionHeader>
+
+              {showAddGuest && (
+                <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "rgba(255, 255, 255, 0.03)", borderRadius: "16px", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                  <SectionHeader style={{ marginBottom: "1rem" }}>
+                    <div>
+                      <SectionTitle>Thêm khách mới</SectionTitle>
+                      <MutedText>Điền tên và email nếu có, hệ thống sẽ tạo link QR tự động.</MutedText>
+                    </div>
+                  </SectionHeader>
+                  <FormGrid onSubmit={addGuest}>
+                    <Field
+                      placeholder="Tên khách"
+                      value={newGuest.name}
+                      onChange={(e) =>
+                        setNewGuest({ ...newGuest, name: e.target.value })
+                      }
+                      required
+                    />
+                    <Field
+                      placeholder="Email (không bắt buộc)"
+                      value={newGuest.email}
+                      onChange={(e) =>
+                        setNewGuest({ ...newGuest, email: e.target.value })
+                      }
+                    />
+                    <PrimaryButton type="submit">Thêm</PrimaryButton>
+                  </FormGrid>
+                </div>
+              )}
 
               <GuestGrid>
                 {guests.map((g) => (
@@ -495,12 +516,6 @@ export default function EventDetail() {
                     <GuestInfo>
                       <GuestName>{g.name}</GuestName>
                       {g.email && <GuestEmail>{g.email}</GuestEmail>}
-                      <StatusPill $checkedIn={g.checkedIn}>
-                        <span>{g.checkedIn ? "✓" : "!"}</span>
-                        <span>
-                          {g.checkedIn ? "Đã check-in" : "Chưa check-in"}
-                        </span>
-                      </StatusPill>
                     </GuestInfo>
 
                     <GuestTools>
@@ -510,15 +525,20 @@ export default function EventDetail() {
                           type="button"
                           onClick={() => copyLink(g._id)}
                         >
-                          Sao chép link
+                          Copy link
                         </GhostButton>
-                        {!g.checkedIn && (
+                        {!g.checkedIn ? (
                           <PrimaryButton
                             type="button"
                             onClick={() => manualCheckIn(g._id)}
                           >
                             Check-in
                           </PrimaryButton>
+                        ) : (
+                          <StatusPill $checkedIn={true}>
+                            <span>✓</span>
+                            <span>Đã check-in</span>
+                          </StatusPill>
                         )}
                       </ToolRow>
                     </GuestTools>

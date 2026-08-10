@@ -40,8 +40,45 @@ const Nav = styled.nav`
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+`;
+
+const NavLinks = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  
+  a {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+    opacity: 0.8;
+    transition: opacity 0.2s, color 0.2s;
+    
+    &:hover {
+      opacity: 1;
+      color: #0ab9c2;
+    }
+  }
+`;
+
+const ThemeButton = styled.button`
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: inherit;
+  font-weight: 600;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 `;
 
 function Shell({ theme, toggleTheme }) {
@@ -52,21 +89,14 @@ function Shell({ theme, toggleTheme }) {
     <>
       {!hideHeader && (
         <Nav>
-          <div>
-            <Link to="/">Home</Link> | <Link to="/guest">Guest</Link> |{" "}
-            <Link to="/admin/login">Admin</Link>
-          </div>
-          <button
-            onClick={toggleTheme}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "inherit",
-            }}
-          >
-            {theme === dark ? "🌞 Light" : "🌙 Dark"}
-          </button>
+          <NavLinks>
+            <Link to="/">Trang chủ</Link>
+            <Link to="/guest">Check-in Khách</Link>
+            <Link to="/admin/events">Quản trị viên</Link>
+          </NavLinks>
+          <ThemeButton onClick={toggleTheme}>
+            {theme === dark ? "🌞 Sáng" : "🌙 Tối"}
+          </ThemeButton>
         </Nav>
       )}
       <Routes>
