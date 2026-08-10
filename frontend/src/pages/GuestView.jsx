@@ -64,7 +64,7 @@ const Ribbon = styled.div`
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  margin: 0;
+  margin: 0 0 10px 0;
 `;
 
 const EventTitle = styled.h2`
@@ -110,6 +110,7 @@ const QRContainer = styled.div`
 `;
 
 const StatusBadge = styled.div`
+  margin: 10px 0 0 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
