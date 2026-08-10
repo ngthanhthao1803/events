@@ -256,6 +256,33 @@ const ScannerWrap = styled.div`
   border: 1px dashed rgba(255, 255, 255, 0.12);
 `;
 
+const ScannerResult = styled.div`
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(11, 185, 194, 0.18);
+`;
+
+const ScannerResultHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+`;
+
+const ScannerResultTitle = styled.h4`
+  margin: 0;
+  font-size: 1rem;
+`;
+
+const ScannerResultMeta = styled.p`
+  margin: 0.2rem 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.92rem;
+`;
+
 const GuestGrid = styled.div`
   display: grid;
   gap: 0.85rem;
@@ -348,6 +375,7 @@ export default function EventDetail() {
   const [guests, setGuests] = useState([]);
   const [newGuest, setNewGuest] = useState({ name: "", email: "" });
   const [scanning, setScanning] = useState(false);
+  const [scannedGuest, setScannedGuest] = useState(null);
   const [showAddGuest, setShowAddGuest] = useState(false);
   const [socket, setSocket] = useState(null);
 
@@ -394,16 +422,34 @@ export default function EventDetail() {
   };
 
   const handleScan = async (data) => {
+    const guest = guests.find((item) => item.qrToken === data);
+
+    if (!guest) {
+      toast.error("Không tìm thấy khách khớp với QR này.");
+      setScanning(false);
+      return;
+    }
+
+    setScannedGuest(guest);
+    setScanning(false);
+  };
+
+  const confirmCheckIn = async () => {
+    if (!scannedGuest) return;
+
     try {
-      await axios.post("/api/guests/checkin", { token: data });
+      await axios.post(`/api/guests/guest/${scannedGuest._id}/checkin`);
       toast.success("Check‑in thành công!");
-      fetchGuests();
+      setGuests((prev) =>
+        prev.map((g) =>
+          g._id === scannedGuest._id ? { ...g, checkedIn: true } : g,
+        ),
+      );
+      setScannedGuest(null);
     } catch (err) {
       toast.error(
         "Check‑in thất bại: " + (err.response?.data?.message || err.message),
       );
-    } finally {
-      setScanning(false);
     }
   };
 
@@ -469,6 +515,45 @@ export default function EventDetail() {
                 </SecondaryButton>
               </SectionHeader>
               {scanning && <QRScanner onScan={handleScan} />}
+
+              {scannedGuest && (
+                <ScannerResult>
+                  <ScannerResultHeader>
+                    <div>
+                      <ScannerResultTitle>
+                        {scannedGuest.name}
+                      </ScannerResultTitle>
+                      <ScannerResultMeta>
+                        {scannedGuest.email || "Không có email"}
+                      </ScannerResultMeta>
+                    </div>
+                    <StatusPill $checkedIn={scannedGuest.checkedIn}>
+                      <span>{scannedGuest.checkedIn ? "✓" : "!"}</span>
+                      <span>
+                        {scannedGuest.checkedIn
+                          ? "Đã điểm danh"
+                          : "Chưa điểm danh"}
+                      </span>
+                    </StatusPill>
+                  </ScannerResultHeader>
+
+                  <ToolRow style={{ justifyContent: "flex-start" }}>
+                    <PrimaryButton
+                      type="button"
+                      onClick={confirmCheckIn}
+                      disabled={scannedGuest.checkedIn}
+                    >
+                      Xác nhận check-in
+                    </PrimaryButton>
+                    <SecondaryButton
+                      type="button"
+                      onClick={() => setScannedGuest(null)}
+                    >
+                      Quét khách khác
+                    </SecondaryButton>
+                  </ToolRow>
+                </ScannerResult>
+              )}
             </Panel>
 
             <Panel>
@@ -476,13 +561,24 @@ export default function EventDetail() {
                 <div>
                   <SectionTitle>Danh sách khách mời</SectionTitle>
                 </div>
-                <IconButton type="button" onClick={() => setShowAddGuest(!showAddGuest)}>
+                <IconButton
+                  type="button"
+                  onClick={() => setShowAddGuest(!showAddGuest)}
+                >
                   {showAddGuest ? "−" : "+"}
                 </IconButton>
               </SectionHeader>
 
               {showAddGuest && (
-                <div style={{ marginBottom: "1.5rem", padding: "1rem", background: "rgba(255, 255, 255, 0.03)", borderRadius: "16px", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <div
+                  style={{
+                    marginBottom: "1.5rem",
+                    padding: "1rem",
+                    background: "rgba(255, 255, 255, 0.03)",
+                    borderRadius: "16px",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                  }}
+                >
                   <SectionHeader style={{ marginBottom: "1rem" }}>
                     <div>
                       <SectionTitle>Thêm khách mới</SectionTitle>
