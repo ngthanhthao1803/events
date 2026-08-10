@@ -27,7 +27,7 @@ const Page = styled.div`
   padding: 2rem 1rem;
   overflow: hidden;
   background-color: #0a1128;
-  background-image: url('/bg-invitation.jpg'); /* Load ảnh từ thư mục public */
+  background-image: url("/bg-invitation.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -44,7 +44,6 @@ const ContentWrapper = styled.div`
   position: relative;
   z-index: 10;
   width: min(100%, 420px);
-  padding: 2.5rem 1rem;
   text-align: center;
   opacity: 0;
   transform: translateY(40px);
@@ -71,12 +70,12 @@ const EventTitle = styled.h2`
   font-weight: 800;
   color: #d4af37; /* Màu vàng đồng */
   text-transform: uppercase;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.02em;
 `;
 
 const Greeting = styled.p`
-  margin: 0 0 2rem;
+  margin: 0 0 0.5rem;
   color: rgba(255, 255, 255, 0.85);
   font-size: 1.1rem;
   font-weight: 400;
@@ -93,9 +92,9 @@ const QRContainer = styled.div`
   border-radius: 8px;
   display: inline-block;
   margin-bottom: 0.5rem;
-  border: 3px solid #d4af37; 
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  
+  border: 3px solid #d4af37;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
   img {
     width: 200px;
     height: 200px;
@@ -113,7 +112,7 @@ const StatusBadge = styled.div`
   font-size: 0.95rem;
   font-weight: 600;
   transition: all 0.3s ease;
-  
+
   color: ${({ $checked }) => ($checked ? "#0f0c29" : "#d4af37")};
   background: ${({ $checked }) => ($checked ? "#d4af37" : "transparent")};
   border: 1px solid #d4af37;
@@ -126,18 +125,26 @@ const FooterText = styled.p`
 `;
 
 const EventInfo = styled.div`
-  margin: 1rem 0 1.5rem;
   color: #fff;
   font-size: 0.95rem;
-  p { margin: 0.5rem 0; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-  svg { color: #d4af37; flex-shrink: 0; }
+  p {
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  svg {
+    color: #d4af37;
+    flex-shrink: 0;
+  }
 `;
 
 const CountdownContainer = styled.div`
   display: flex;
   justify-content: center;
-  gap: 0.8rem;
-  margin: 1.5rem 0;
+  gap: 0.5rem;
+  margin: 1.1rem 0;
 `;
 
 const TimeBox = styled.div`
@@ -146,19 +153,24 @@ const TimeBox = styled.div`
   background: rgba(15, 12, 41, 0.6);
   border: 1px solid rgba(212, 175, 55, 0.5);
   border-radius: 8px;
-  padding: 0.5rem 0.6rem;
-  min-width: 55px;
-  
+  padding: 0.35rem 0.45rem;
+  min-width: 44px;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+
   .value {
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #d4af37;
+    line-height: 1;
   }
   .label {
-    font-size: 0.7rem;
+    font-size: 0.58rem;
     color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
-    margin-top: 2px;
+    margin-top: 1px;
+    line-height: 1;
   }
 `;
 
@@ -174,7 +186,7 @@ function Countdown({ targetDate }) {
         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
         hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
         minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60)
+        seconds: Math.floor((difference / 1000) % 60),
       };
     }
     return timeLeft;
@@ -188,19 +200,30 @@ function Countdown({ targetDate }) {
   });
 
   const timerComponents = [];
-  const labels = { days: 'Ngày', hours: 'Giờ', minutes: 'Phút', seconds: 'Giây' };
+  const labels = {
+    days: "Ngày",
+    hours: "Giờ",
+    minutes: "Phút",
+    seconds: "Giây",
+  };
 
   Object.keys(timeLeft).forEach((interval) => {
     timerComponents.push(
       <TimeBox key={interval}>
-        <span className="value">{timeLeft[interval].toString().padStart(2, '0')}</span>
+        <span className="value">
+          {timeLeft[interval].toString().padStart(2, "0")}
+        </span>
         <span className="label">{labels[interval]}</span>
-      </TimeBox>
+      </TimeBox>,
     );
   });
 
   if (!timerComponents.length) {
-    return <p style={{ color: '#d4af37', fontWeight: 600, margin: '1rem 0' }}>Sự kiện đang diễn ra!</p>;
+    return (
+      <p style={{ color: "#d4af37", fontWeight: 600, margin: "1rem 0" }}>
+        Sự kiện đang diễn ra!
+      </p>
+    );
   }
 
   return <CountdownContainer>{timerComponents}</CountdownContainer>;
@@ -226,8 +249,8 @@ export default function GuestView() {
               setChecked(true);
               toast.success("Bạn đã được check‑in!", {
                 style: {
-                  background: '#d4af37',
-                  color: '#0f0c29',
+                  background: "#d4af37",
+                  color: "#0f0c29",
                 },
               });
             }
@@ -247,8 +270,8 @@ export default function GuestView() {
   if (!guest) {
     return (
       <Page>
-        <ContentWrapper style={{ width: 'auto' }}>
-          <p style={{ color: '#d4af37', margin: 0 }}>Đang tải thiệp mời…</p>
+        <ContentWrapper style={{ width: "auto" }}>
+          <p style={{ color: "#d4af37", margin: 0 }}>Đang tải thiệp mời…</p>
         </ContentWrapper>
       </Page>
     );
@@ -264,15 +287,47 @@ export default function GuestView() {
           <>
             <EventInfo>
               <p>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                {new Date(guest.eventId.date).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                {new Date(guest.eventId.date).toLocaleString("vi-VN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })}
               </p>
               <p>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
                 {guest.eventId.location}
               </p>
             </EventInfo>
-            {guest.eventId.date && <Countdown targetDate={guest.eventId.date} />}
+            {guest.eventId.date && (
+              <Countdown targetDate={guest.eventId.date} />
+            )}
           </>
         )}
 
@@ -290,7 +345,16 @@ export default function GuestView() {
           <StatusBadge $checked={checked}>
             {checked ? (
               <>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 Đã điểm danh thành công
