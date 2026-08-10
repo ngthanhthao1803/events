@@ -9,7 +9,7 @@ import { getSocketUrl } from "../utils/socketUrl";
 
 const PageShell = styled.div`
   position: relative;
-  padding: 2rem;
+  padding: 0.5rem;
   overflow: hidden;
 
   &::before,
@@ -378,6 +378,7 @@ export default function EventDetail() {
   const [scannedGuest, setScannedGuest] = useState(null);
   const [showAddGuest, setShowAddGuest] = useState(false);
   const [socket, setSocket] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
 
   const fetchEvent = async () => {
     const res = await axios.get(`/api/events/${id}`);
@@ -418,6 +419,8 @@ export default function EventDetail() {
   const copyLink = async (guestId) => {
     const link = `${window.location.origin}/guest/${guestId}`;
     await navigator.clipboard.writeText(link);
+    setCopiedId(guestId);
+    setTimeout(() => setCopiedId(null), 2000);
     toast.success("Link đã được sao chép!");
   };
 
@@ -619,8 +622,9 @@ export default function EventDetail() {
                         <GhostButton
                           type="button"
                           onClick={() => copyLink(g._id)}
+                          disabled={copiedId === g._id}
                         >
-                          Copy link
+                          {copiedId === g._id ? "Copied ✓" : "Copy link"}
                         </GhostButton>
                         {!g.checkedIn ? (
                           <PrimaryButton
