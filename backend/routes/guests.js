@@ -79,4 +79,27 @@ router.post("/guest/:guestId/checkin", async (req, res) => {
   }
 });
 
+// Update a guest (PUT /api/guests/:guestId)
+router.put("/:guestId", async (req, res) => {
+  try {
+    const guest = await Guest.findByIdAndUpdate(req.params.guestId, req.body, { new: true });
+    if (!guest) return res.status(404).json({ message: "Guest not found" });
+    const qrDataUrl = await generateQR(guest.qrToken);
+    res.json({ ...guest.toObject(), qrDataUrl });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Delete a guest (DELETE /api/guests/:guestId)
+router.delete("/:guestId", async (req, res) => {
+  try {
+    const guest = await Guest.findByIdAndDelete(req.params.guestId);
+    if (!guest) return res.status(404).json({ message: "Guest not found" });
+    res.json({ message: "Guest deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

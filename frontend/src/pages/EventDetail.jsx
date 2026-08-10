@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import styled from "styled-components";
 import QRScanner from "../components/QRScanner";
@@ -105,6 +105,51 @@ const EventMeta = styled.p`
   margin-top: 0.6rem;
   color: rgba(255, 255, 255, 0.68);
   font-size: 0.98rem;
+`;
+
+const EditForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+  max-width: 600px;
+  margin-top: 1rem;
+`;
+
+const EditInput = styled.input`
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+  &:focus { border-color: #0ab9c2; }
+`;
+
+const EditTextarea = styled.textarea`
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  &:focus { border-color: #0ab9c2; }
+`;
+
+const ActionRow = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 `;
 
 const StatsGrid = styled.div`
@@ -331,11 +376,11 @@ const GuestEmail = styled.div`
 const StatusPill = styled.div`
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   margin: 0;
-  padding: 0.38rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.88rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
   font-weight: 700;
   color: ${({ $checkedIn }) => ($checkedIn ? "#9ef3b2" : "#ffb0b0")};
   background: ${({ $checkedIn }) =>
@@ -343,9 +388,11 @@ const StatusPill = styled.div`
 `;
 
 const GuestTools = styled.div`
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.7rem;
+  justify-content: flex-end;
+  align-items: center;
 `;
 
 const QRImage = styled.img`
@@ -365,8 +412,15 @@ const ToolRow = styled.div`
 `;
 
 const GhostButton = styled(SecondaryButton)`
-  padding: 0.6rem 0.65rem;
-  font-size: 0.88rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+  border-radius: 8px;
+`;
+
+const SmallPrimaryButton = styled(PrimaryButton)`
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  border-radius: 8px;
 `;
 
 export default function EventDetail() {
@@ -379,10 +433,25 @@ export default function EventDetail() {
   const [showAddGuest, setShowAddGuest] = useState(false);
   const [socket, setSocket] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({ title: "", date: "", location: "", description: "" });
+  const [editingGuestId, setEditingGuestId] = useState(null);
+  const [editGuestData, setEditGuestData] = useState({ name: "", email: "" });
+
+  const navigate = useNavigate();
 
   const fetchEvent = async () => {
     const res = await axios.get(`/api/events/${id}`);
     setEvent(res.data);
+    const d = new Date(res.data.date);
+    const tzoffset = d.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(d - tzoffset).toISOString().slice(0, 16);
+    setEditData({
+      title: res.data.title || "",
+      date: localISOTime || "",
+      location: res.data.location || "",
+      description: res.data.description || ""
+    });
   };
 
   const fetchGuests = async () => {
@@ -471,6 +540,60 @@ export default function EventDetail() {
     }
   };
 
+  const handleUpdateEvent = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put(`/api/events/${id}`, editData);
+      setEvent(res.data);
+      setIsEditing(false);
+      toast.success("Cập nhật thành công!");
+    } catch (err) {
+      toast.error("Lỗi cập nhật: " + err.message);
+    }
+  };
+
+  const handlePreviewCard = () => {
+    window.open(`/guest/preview/${id}`, '_blank');
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!window.confirm("Xóa thiệt chứ?")) return;
+    try {
+      await axios.delete(`/api/events/${id}`);
+      toast.success("Đã xóa");
+      navigate("/admin/events");
+    } catch (err) {
+      toast.error("Lỗi khi xóa sự kiện: " + err.message);
+    }
+  };
+
+  const handleEditGuest = (guest) => {
+    setEditingGuestId(guest._id);
+    setEditGuestData({ name: guest.name, email: guest.email });
+  };
+
+  const handleSaveGuest = async (guestId) => {
+    try {
+      const res = await axios.put(`/api/guests/${guestId}`, editGuestData);
+      setGuests((prev) => prev.map((g) => (g._id === guestId ? res.data : g)));
+      setEditingGuestId(null);
+      toast.success("Cập nhật thông tin khách thành công!");
+    } catch (err) {
+      toast.error("Lỗi cập nhật khách: " + err.message);
+    }
+  };
+
+  const handleDeleteGuest = async (guestId) => {
+    if (!window.confirm("Xóa thiệt chứ?")) return;
+    try {
+      await axios.delete(`/api/guests/${guestId}`);
+      setGuests((prev) => prev.filter((g) => g._id !== guestId));
+      toast.success("Đã xóa khách mời!");
+    } catch (err) {
+      toast.error("Lỗi khi xóa khách: " + err.message);
+    }
+  };
+
   return (
     <PageShell>
       <Content>
@@ -479,9 +602,66 @@ export default function EventDetail() {
             <Hero>
               <Eyebrow>Admin event dashboard</Eyebrow>
               <TitleRow>
-                <TitleBlock>
-                  <EventTitle>{event.title}</EventTitle>
-                  <EventMeta>{new Date(event.date).toLocaleString()}</EventMeta>
+                <TitleBlock style={{ width: '100%' }}>
+                  {isEditing ? (
+                    <EditForm onSubmit={handleUpdateEvent}>
+                      <EditInput
+                        placeholder="Tên sự kiện"
+                        value={editData.title}
+                        onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                        required
+                      />
+                      <EditInput
+                        type="datetime-local"
+                        value={editData.date}
+                        onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                        required
+                      />
+                      <EditInput
+                        placeholder="Địa điểm (không bắt buộc)"
+                        value={editData.location}
+                        onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+                      />
+                      <EditTextarea
+                        placeholder="Mô tả sự kiện (không bắt buộc)"
+                        value={editData.description}
+                        onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                      />
+                      <ActionRow>
+                        <PrimaryButton type="submit">Lưu</PrimaryButton>
+                        <SecondaryButton type="button" onClick={() => setIsEditing(false)}>
+                          Hủy
+                        </SecondaryButton>
+                        <SecondaryButton
+                          type="button"
+                          onClick={handleDeleteEvent}
+                          style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ffb0b0' }}
+                        >
+                          Xóa
+                        </SecondaryButton>
+                      </ActionRow>
+                    </EditForm>
+                  ) : (
+                    <>
+                      <EventTitle>{event.title}</EventTitle>
+                      <EventMeta>
+                        {new Date(event.date).toLocaleString()}
+                        {event.location && ` • ${event.location}`}
+                      </EventMeta>
+                      <ActionRow style={{ marginTop: '1rem' }}>
+                        <SecondaryButton type="button" onClick={() => setIsEditing(true)}>
+                          Chỉnh sửa sự kiện
+                        </SecondaryButton>
+                        <GhostButton
+                          type="button"
+                          onClick={handlePreviewCard}
+                          style={{ background: 'rgba(11, 185, 194, 0.1)', color: '#0ab9c2' }}
+                        >
+                          Xem thiệp mời
+                        </GhostButton>
+                      </ActionRow>
+                    </>
+                  )}
                 </TitleBlock>
               </TitleRow>
 
@@ -611,36 +791,64 @@ export default function EventDetail() {
               <GuestGrid>
                 {guests.map((g) => (
                   <GuestCard key={g._id}>
-                    <GuestInfo>
-                      <GuestName>{g.name}</GuestName>
-                      {g.email && <GuestEmail>{g.email}</GuestEmail>}
-                    </GuestInfo>
+                    {editingGuestId === g._id ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', gridColumn: '1 / -1' }}>
+                        <Field
+                          placeholder="Tên khách"
+                          value={editGuestData.name}
+                          onChange={(e) => setEditGuestData({ ...editGuestData, name: e.target.value })}
+                        />
+                        <Field
+                          placeholder="Email"
+                          value={editGuestData.email}
+                          onChange={(e) => setEditGuestData({ ...editGuestData, email: e.target.value })}
+                        />
+                        <ToolRow style={{ justifyContent: 'flex-start' }}>
+                          <PrimaryButton type="button" onClick={() => handleSaveGuest(g._id)}>Lưu</PrimaryButton>
+                          <SecondaryButton type="button" onClick={() => setEditingGuestId(null)}>Hủy</SecondaryButton>
+                        </ToolRow>
+                      </div>
+                    ) : (
+                      <>
+                        <GuestInfo>
+                          <GuestName>{g.name}</GuestName>
+                          {g.email && <GuestEmail>{g.email}</GuestEmail>}
+                        </GuestInfo>
 
-                    <GuestTools>
-                      {/* {g.qrDataUrl && <QRImage src={g.qrDataUrl} alt="QR" />} */}
-                      <ToolRow>
-                        <GhostButton
-                          type="button"
-                          onClick={() => copyLink(g._id)}
-                          disabled={copiedId === g._id}
-                        >
-                          {copiedId === g._id ? "Copied ✓" : "Copy link"}
-                        </GhostButton>
-                        {!g.checkedIn ? (
-                          <PrimaryButton
-                            type="button"
-                            onClick={() => manualCheckIn(g._id)}
-                          >
-                            Check-in
-                          </PrimaryButton>
-                        ) : (
-                          <StatusPill $checkedIn={true}>
-                            <span>✓</span>
-                            <span>Đã check-in</span>
-                          </StatusPill>
-                        )}
-                      </ToolRow>
-                    </GuestTools>
+                        <GuestTools>
+                          <ToolRow>
+                            <GhostButton
+                              type="button"
+                              onClick={() => copyLink(g._id)}
+                              disabled={copiedId === g._id}
+                            >
+                              {copiedId === g._id ? "Copied ✓" : "Copy link"}
+                            </GhostButton>
+                            {!g.checkedIn ? (
+                              <SmallPrimaryButton
+                                type="button"
+                                onClick={() => manualCheckIn(g._id)}
+                              >
+                                Check-in
+                              </SmallPrimaryButton>
+                            ) : (
+                              <StatusPill $checkedIn={true}>
+                                <span>✓</span>
+                                <span>Đã check-in</span>
+                              </StatusPill>
+                            )}
+                            <GhostButton type="button" onClick={() => handleEditGuest(g)}>Sửa</GhostButton>
+                            <GhostButton
+                              type="button"
+                              onClick={() => handleDeleteGuest(g._id)}
+                              style={{ color: '#ffb0b0' }}
+                            >
+                              Xóa
+                            </GhostButton>
+                          </ToolRow>
+                        </GuestTools>
+                      </>
+                    )}
                   </GuestCard>
                 ))}
               </GuestGrid>

@@ -13,6 +13,7 @@ import AdminLogin from "./pages/AdminLogin";
 import EventList from "./pages/EventList";
 import EventDetail from "./pages/EventDetail";
 import GuestView from "./pages/GuestView";
+import { Toaster } from "react-hot-toast";
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
@@ -107,7 +108,8 @@ function Shell({ theme, toggleTheme }) {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/events" element={<EventList />} />
         <Route path="/admin/events/:id" element={<EventDetail />} />
-        <Route path="/guest/:guestId" element={<GuestView />} />
+        <Route path="/guest/preview/:eventId" element={<GuestView isPreview={true} />} />
+        <Route path="/guest/:guestId" element={<GuestView isPreview={false} />} />
       </Routes>
     </>
   );
@@ -127,6 +129,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyle />
+      <Toaster position="top-right" />
       <BrowserRouter>
         <Shell theme={theme} toggleTheme={toggleTheme} />
       </BrowserRouter>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import styled from "styled-components";
 
@@ -140,13 +140,15 @@ export default function EventList() {
     fetchEvents();
   }, []);
 
+  const navigate = useNavigate();
+
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!title.trim()) return;
     try {
-      await axios.post("/api/events", { title, date: new Date() });
+      const res = await axios.post("/api/events", { title, date: new Date() });
       setTitle("");
-      fetchEvents();
+      navigate(`/admin/events/${res.data._id}`);
     } catch (error) {
       console.error("Failed to create event", error);
     }

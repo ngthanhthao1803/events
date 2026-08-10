@@ -237,43 +237,59 @@ function Countdown({ targetDate }) {
   return <CountdownContainer>{timerComponents}</CountdownContainer>;
 }
 
-export default function GuestView() {
-  const { guestId } = useParams();
+export default function GuestView({ isPreview = false }) {
+  const { guestId, eventId } = useParams();
   const [guest, setGuest] = useState(null);
   const [checked, setChecked] = useState(false);
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const fetchGuest = async () => {
-      try {
-        const res = await axios.get(`/api/guests/guest/${guestId}`);
-        setGuest(res.data);
-        setChecked(res.data.checkedIn);
-        if (res.data.eventId) {
-          const s = io(getSocketUrl());
-          s.emit("joinEvent", res.data.eventId);
-          s.on("guestCheckedIn", ({ guestId: updatedId }) => {
-            if (updatedId === guestId) {
-              setChecked(true);
-              toast.success("Bạn đã được check‑in!", {
-                style: {
-                  background: "#d4af37",
-                  color: "#0f0c29",
-                },
-              });
-            }
+    if (isPreview) {
+      const fetchPreview = async () => {
+        try {
+          const res = await axios.get(`/api/events/${eventId}`);
+          setGuest({
+            name: "Hữu Toàn",
+            eventId: res.data,
+            qrDataUrl: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=preview",
           });
-          setSocket(s);
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchGuest();
+      };
+      fetchPreview();
+    } else {
+      const fetchGuest = async () => {
+        try {
+          const res = await axios.get(`/api/guests/guest/${guestId}`);
+          setGuest(res.data);
+          setChecked(res.data.checkedIn);
+          if (res.data.eventId) {
+            const s = io(getSocketUrl());
+            s.emit("joinEvent", res.data.eventId);
+            s.on("guestCheckedIn", ({ guestId: updatedId }) => {
+              if (updatedId === guestId) {
+                setChecked(true);
+                toast.success("Bạn đã được check‑in!", {
+                  style: {
+                    background: "#d4af37",
+                    color: "#0f0c29",
+                  },
+                });
+              }
+            });
+            setSocket(s);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+      fetchGuest();
+    }
     return () => {
       if (socket) socket.disconnect();
     };
-  }, [guestId]);
+  }, [guestId, eventId, isPreview]);
 
   if (!guest) {
     return (
