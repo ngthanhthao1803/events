@@ -486,7 +486,6 @@ export default function EventDetail() {
                   <SectionHeader style={{ marginBottom: "1rem" }}>
                     <div>
                       <SectionTitle>Thêm khách mới</SectionTitle>
-                      <MutedText>Điền tên và email nếu có, hệ thống sẽ tạo link QR tự động.</MutedText>
                     </div>
                   </SectionHeader>
                   <FormGrid onSubmit={addGuest}>
