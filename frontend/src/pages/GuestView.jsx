@@ -44,9 +44,13 @@ const ContentWrapper = styled.div`
   position: relative;
   z-index: 10;
   width: min(100%, 420px);
+  height: 65svh; /* Giới hạn chiều cao an toàn để chừa hoa văn */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
   text-align: center;
   opacity: 0;
-  transform: translateY(40px);
   animation: ${slideUp} 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 `;
 
@@ -60,22 +64,22 @@ const Ribbon = styled.div`
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  margin-bottom: 1.5rem;
+  margin: 0;
 `;
 
 const EventTitle = styled.h2`
-  margin: 0 0 0.5rem;
-  font-size: clamp(1.8rem, 6vw, 2.4rem);
+  margin: 0;
+  font-size: clamp(1.5rem, 6vw, 2.2rem);
   line-height: 1.2;
   font-weight: 800;
-  color: #d4af37; /* Màu vàng đồng */
+  color: #d4af37;
   text-transform: uppercase;
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
   letter-spacing: 0.02em;
 `;
 
 const Greeting = styled.p`
-  margin: 0 0 0.5rem;
+  margin: 0;
   color: rgba(255, 255, 255, 0.85);
   font-size: 1.1rem;
   font-weight: 400;
@@ -88,16 +92,19 @@ const Greeting = styled.p`
 
 const QRContainer = styled.div`
   background: #fff;
-  padding: 1px;
+  padding: 4px;
   border-radius: 8px;
   display: inline-block;
-  margin-bottom: 0.5rem;
+  margin: 0;
   border: 3px solid #d4af37;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 
   img {
-    width: 200px;
-    height: 200px;
+    width: auto;
+    height: 25svh; /* Resize slightly based on screen height */
+    max-height: 220px;
+    max-width: 220px;
+    aspect-ratio: 1/1;
     display: block;
   }
 `;
@@ -144,7 +151,7 @@ const CountdownContainer = styled.div`
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  margin: 1.1rem 0;
+  margin: 0;
 `;
 
 const TimeBox = styled.div`
