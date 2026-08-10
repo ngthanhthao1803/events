@@ -51,14 +51,16 @@ const Nav = styled.nav`
 const NavLinks = styled.div`
   display: flex;
   gap: 1.5rem;
-  
+
   a {
     color: inherit;
     text-decoration: none;
     font-weight: 600;
     opacity: 0.8;
-    transition: opacity 0.2s, color 0.2s;
-    
+    transition:
+      opacity 0.2s,
+      color 0.2s;
+
     &:hover {
       opacity: 1;
       color: #0ab9c2;
@@ -91,8 +93,8 @@ function Shell({ theme, toggleTheme }) {
         <Nav>
           <NavLinks>
             <Link to="/">Trang chủ</Link>
-            <Link to="/guest">Check-in Khách</Link>
-            <Link to="/admin/events">Quản trị viên</Link>
+            {/* <Link to="/guest">Check-in Khách</Link> */}
+            <Link to="/admin/events">Events</Link>
           </NavLinks>
           <ThemeButton onClick={toggleTheme}>
             {theme === dark ? "🌞 Sáng" : "🌙 Tối"}
