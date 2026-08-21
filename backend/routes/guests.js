@@ -3,6 +3,7 @@ import Guest from "../models/Guest.js";
 import Event from "../models/Event.js";
 import { v4 as uuidv4 } from "uuid";
 import { generateQR } from "../utils/qrcode.js";
+import { generateShortCode } from "../utils/shortCode.js";
 import { ioInstance } from "../socket.js";
 
 const router = express.Router();
@@ -18,7 +19,8 @@ router.post("/", async (req, res) => {
     if (!event) return res.status(404).json({ message: "Event not found" });
 
     const qrToken = uuidv4();
-    const guest = new Guest({ eventId, name, email, qrToken });
+    const shortCode = generateShortCode();
+    const guest = new Guest({ eventId, name, email, qrToken, shortCode });
     await guest.save();
     const qrDataUrl = await generateQR(qrToken);
     res.status(201).json({ guest, qrDataUrl });
@@ -47,7 +49,16 @@ router.get("/:eventId", async (req, res) => {
 // Public endpoint to get guest info (including event) by guest ID (GET /api/guests/guest/:guestId)
 router.get("/guest/:guestId", async (req, res) => {
   try {
-    const guest = await Guest.findById(req.params.guestId).populate("eventId");
+    let guest;
+    // Check if the parameter is a valid ObjectId
+    if (req.params.guestId.match(/^[0-9a-fA-F]{24}$/)) {
+      guest = await Guest.findById(req.params.guestId).populate("eventId");
+    }
+    // If not found by ObjectId, try searching by shortCode
+    if (!guest) {
+      guest = await Guest.findOne({ shortCode: req.params.guestId }).populate("eventId");
+    }
+    
     if (!guest) return res.status(404).json({ message: "Guest not found" });
     const qrDataUrl = await generateQR(guest.qrToken);
     const guestObj = guest.toObject();
@@ -61,7 +72,13 @@ router.get("/guest/:guestId", async (req, res) => {
 // Check‑in endpoint (POST /api/guests/guest/:guestId/checkin)
 router.post("/guest/:guestId/checkin", async (req, res) => {
   try {
-    const guest = await Guest.findById(req.params.guestId);
+    let guest;
+    if (req.params.guestId.match(/^[0-9a-fA-F]{24}$/)) {
+      guest = await Guest.findById(req.params.guestId);
+    }
+    if (!guest) {
+      guest = await Guest.findOne({ shortCode: req.params.guestId });
+    }
     if (!guest) return res.status(404).json({ message: "Guest not found" });
     if (guest.checkedIn)
       return res.status(400).json({ message: "Guest already checked in" });

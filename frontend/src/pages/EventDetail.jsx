@@ -499,8 +499,10 @@ export default function EventDetail() {
   };
 
   const copyLink = async (guestId) => {
+    const guest = guests.find(g => g._id === guestId);
+    const identifier = guest?.shortCode || guestId;
     const eventSlug = slugify(event?.title);
-    const link = `${window.location.origin}/guest/${guestId}/${eventSlug}`;
+    const link = `${window.location.origin}/guest/${identifier}/${eventSlug}`;
     await navigator.clipboard.writeText(link);
     setCopiedId(guestId);
     setTimeout(() => setCopiedId(null), 2000);
