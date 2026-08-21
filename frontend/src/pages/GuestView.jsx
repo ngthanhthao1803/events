@@ -51,7 +51,7 @@ const Page = styled.div`
   background-position: center top;
   background-repeat: no-repeat;
   color: #725227;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 `;
 
 const Logos = styled.div`
@@ -59,13 +59,19 @@ const Logos = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 420px;
+  max-width: 370px;
   margin-top: 0.5rem;
   padding: 0 5px;
 
-  img.logo1 { height: 45px; }
-  img.logo2 { height: 32px; }
-  img.logo3 { height: 40px; }
+  img.logo1 {
+    height: 45px;
+  }
+  img.logo2 {
+    height: 32px;
+  }
+  img.logo3 {
+    height: 40px;
+  }
 `;
 
 const slideUp = keyframes`
@@ -86,7 +92,7 @@ const ContentWrapper = styled.div`
 `;
 
 const ThuMoi = styled.div`
-  font-family: 'Times New Roman', serif;
+  font-family: "Times New Roman", serif;
   font-size: 4rem;
   font-weight: 700;
   color: #fffaea;
@@ -95,12 +101,12 @@ const ThuMoi = styled.div`
   margin-top: 2rem;
   margin-bottom: 1.5rem;
   -webkit-text-stroke: 1px #a87932;
-  text-shadow: 
-     -1px 1px 0 #8f611f,
-     -2px 2px 0 #7d5115,
-     -3px 3px 0 #66400c,
-     -4px 4px 0 #523105,
-     -5px 5px 10px rgba(0,0,0,0.5);
+  text-shadow:
+    -1px 1px 0 #8f611f,
+    -2px 2px 0 #7d5115,
+    -3px 3px 0 #66400c,
+    -4px 4px 0 #523105,
+    -5px 5px 10px rgba(0, 0, 0, 0.5);
 `;
 
 const Subtitle = styled.div`
@@ -132,7 +138,7 @@ const EventInfo = styled.div`
     font-weight: 900;
     color: #fff;
     -webkit-text-stroke: 1px #c59346;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
     margin-bottom: 0.2rem;
     letter-spacing: 0.05em;
   }
@@ -150,7 +156,7 @@ const BallImage = styled.img`
 const ConfirmBtn = styled.div`
   width: 260px;
   height: 55px;
-  background-image: url('/invitation_card/button.png');
+  background-image: url("/invitation_card/button.png");
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
@@ -166,7 +172,9 @@ const ConfirmBtn = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.05em;
 
-  &:active { transform: scale(0.95); }
+  &:active {
+    transform: scale(0.95);
+  }
 `;
 
 const QRContainer = styled.div`
@@ -196,22 +204,25 @@ const LuckyNumber = styled.div`
   font-weight: 700;
   font-size: 1rem;
   text-transform: uppercase;
-  
-  background: linear-gradient(to top, #8A4B08 30%, #C87D0E 100%, #EFA836 100%);
+
+  background: linear-gradient(to top, #8a4b08 30%, #c87d0e 100%, #efa836 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  
-  
+
   .num {
     font-size: 3rem;
     font-weight: 900;
     line-height: 1.1;
-    background: linear-gradient(to bottom, #8A4B08 30%, #C87D0E 80%, #EFA836 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  
+    background: linear-gradient(
+      to bottom,
+      #8a4b08 30%,
+      #c87d0e 80%,
+      #efa836 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 `;
 
@@ -222,8 +233,12 @@ const EventTimeLoc = styled.div`
   gap: 1rem;
   margin: 1rem 0 0.2rem 0;
 
-
-  background: linear-gradient(to bottom, #8A4B08 30%, #C87D0E 80%, #EFA836 100%);
+  background: linear-gradient(
+    to bottom,
+    #8a4b08 30%,
+    #c87d0e 80%,
+    #efa836 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -231,13 +246,18 @@ const EventTimeLoc = styled.div`
   .time {
     font-size: 2.8rem;
     font-weight: 400;
-    font-family: 'Times New Roman', serif;
+    font-family: "Times New Roman", serif;
   }
-  
+
   .divider {
     width: 1px;
     height: 40px;
-    background: linear-gradient(to bottom, #8A4B08 30%, #C87D0E 80%, #EFA836 100%);
+    background: linear-gradient(
+      to bottom,
+      #8a4b08 30%,
+      #c87d0e 80%,
+      #efa836 100%
+    );
   }
 
   .date {
@@ -248,8 +268,13 @@ const EventTimeLoc = styled.div`
     display: flex;
     flex-direction: column;
 
-    span{
-      background: linear-gradient(to bottom, #8A4B08 30%, #C87D0E 80%, #EFA836 100%);
+    span {
+      background: linear-gradient(
+        to bottom,
+        #8a4b08 30%,
+        #c87d0e 80%,
+        #efa836 100%
+      );
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -262,10 +287,15 @@ const LocationText = styled.p`
   font-weight: 700;
   margin: 0 0 1rem 0;
 
-  background: linear-gradient(to bottom, #8A4B08 30%, #C87D0E 80%, #EFA836 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+  background: linear-gradient(
+    to bottom,
+    #8a4b08 30%,
+    #c87d0e 80%,
+    #efa836 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const CountdownContainer = styled.div`
@@ -281,16 +311,16 @@ const CountdownContainer = styled.div`
     text-transform: uppercase;
     margin-bottom: 0.5rem;
     color: #fff;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
   }
-  
+
   .subtitle {
     font-size: 1.1rem;
     font-weight: 700;
     text-transform: uppercase;
     margin-top: 1rem;
-    
-    background: linear-gradient(to top, #D29837 0%, #F1D487 10%, #FFF3B3 100%);
+
+    background: linear-gradient(to top, #d29837 0%, #f1d487 10%, #fff3b3 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -306,7 +336,7 @@ const TimeBox = styled.div`
     font-size: 3rem;
     font-weight: 800;
     color: #fff;
-    text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
     line-height: 1;
   }
   .label {
@@ -329,12 +359,22 @@ const rotateGlow = keyframes`
   100% { transform: translate(-50%, -50%) rotate(360deg) translateZ(0); }
 `;
 
+const arrowDownMotion = keyframes`
+  0%, 100% { transform: translateY(0) rotate(45deg); }
+  50% { transform: translateY(5px) rotate(45deg); }
+`;
+
+const arrowUpMotion = keyframes`
+  0%, 100% { transform: translateY(0) rotate(-135deg); }
+  50% { transform: translateY(-5px) rotate(-135deg); }
+`;
+
 const ScheduleList = styled.div`
   width: 100%;
   margin-top: 1.5rem;
   text-align: left;
   padding: 0 10px;
-  
+
   .header {
     font-size: 1rem;
     font-weight: 800;
@@ -342,9 +382,65 @@ const ScheduleList = styled.div`
     text-transform: uppercase;
     text-align: center;
     margin-bottom: 1rem;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
   }
-  
+
+  .toggle-button {
+    display: block;
+    width: 42px;
+    height: 32px;
+    margin: 0 auto 0.8rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.45));
+
+    &:hover .arrow {
+      border-color: #fff9dc;
+    }
+    &:active {
+      transform: scale(0.9);
+    }
+
+    .arrow {
+      display: block;
+      width: 14px;
+      height: 14px;
+      margin: 0 auto;
+      border-right: 3px solid currentColor;
+      border-bottom: 3px solid currentColor;
+      transition: border-color 0.2s;
+    }
+
+    .arrow-down {
+      animation: ${arrowDownMotion} 1.4s ease-in-out infinite;
+    }
+
+    .arrow-up {
+      animation: ${arrowUpMotion} 1.4s ease-in-out infinite;
+    }
+  }
+
+  .schedule-items {
+    max-height: 1000px;
+    opacity: 1;
+    overflow: hidden;
+    transform: translateY(0);
+    transition:
+      max-height 0.6s ease,
+      opacity 0.35s ease,
+      transform 0.6s ease;
+
+    &.closed {
+      max-height: 0;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-12px);
+    }
+  }
+
   .item {
     display: flex;
     align-items: center;
@@ -354,13 +450,13 @@ const ScheduleList = styled.div`
     color: #8c5a1a;
     position: relative;
     padding-left: 1.5rem;
-    
+
     &.active {
       color: #fff;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-      
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+
       &::before {
-        content: '';
+        content: "";
         position: absolute;
         left: -3px;
         top: 50%;
@@ -372,28 +468,35 @@ const ScheduleList = styled.div`
         animation: ${dotGlow} 1.5s infinite;
         z-index: 2;
       }
-      
+
       .content-box {
         position: relative;
         overflow: hidden;
         z-index: 1;
         box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
         border: none;
-        
+
         &::before {
-          content: '';
+          content: "";
           position: absolute;
-          top: 50%; left: 50%;
+          top: 50%;
+          left: 50%;
           width: 500px;
           height: 500px;
-          background: conic-gradient(from 0deg, transparent 0%, transparent 70%, rgba(255,255,255,0.6) 90%, #fff 100%);
+          background: conic-gradient(
+            from 0deg,
+            transparent 0%,
+            transparent 70%,
+            rgba(255, 255, 255, 0.6) 90%,
+            #fff 100%
+          );
           animation: ${rotateGlow} 2.5s linear infinite;
           z-index: -2;
           will-change: transform;
         }
 
         &::after {
-          content: '';
+          content: "";
           position: absolute;
           inset: 2px;
           background: rgba(184, 126, 42, 0.95);
@@ -402,7 +505,7 @@ const ScheduleList = styled.div`
         }
       }
     }
-    
+
     .content-box {
       display: flex;
       align-items: center;
@@ -411,13 +514,13 @@ const ScheduleList = styled.div`
       border: 1px solid transparent;
       border-radius: 6px;
     }
-    
+
     .time {
       margin-right: 8px;
       font-weight: 800;
       flex-shrink: 0;
     }
-    
+
     .label {
       font-weight: 400;
     }
@@ -464,20 +567,30 @@ function Countdown({ targetDate }) {
   });
 
   if (Object.keys(timeLeft).length === 0) {
-    return <p style={{ color: "#fff", fontWeight: 700, marginTop: "1rem" }}>Sự kiện đang diễn ra!</p>;
+    return (
+      <p style={{ color: "#fff", fontWeight: 700, marginTop: "1rem" }}>
+        Sự kiện đang diễn ra!
+      </p>
+    );
   }
 
   return (
     <CountdownContainer>
       <div className="title">CHỈ CÒN</div>
-      <TimeBox style={{ justifyContent: 'center', width: '100%', marginBottom: '5px' }}>
+      <TimeBox
+        style={{ justifyContent: "center", width: "100%", marginBottom: "5px" }}
+      >
         <span className="value">{timeLeft.days || 0}</span>
         <span className="label">Ngày</span>
       </TimeBox>
-      <TimeBox style={{ justifyContent: 'center', width: '100%' }}>
-        <span className="value">{timeLeft.hours?.toString().padStart(2, "0") || "00"}</span>
+      <TimeBox style={{ justifyContent: "center", width: "100%" }}>
+        <span className="value">
+          {timeLeft.hours?.toString().padStart(2, "0") || "00"}
+        </span>
         <span className="label">Giờ</span>
-        <span className="value">{timeLeft.minutes?.toString().padStart(2, "0") || "00"}</span>
+        <span className="value">
+          {timeLeft.minutes?.toString().padStart(2, "0") || "00"}
+        </span>
         <span className="label">Phút</span>
       </TimeBox>
       <div className="subtitle">SỰ KIỆN SẼ DIỄN RA</div>
@@ -489,8 +602,9 @@ export default function GuestView({ isPreview = false }) {
   const { guestId, eventId } = useParams();
   const [guest, setGuest] = useState(null);
   const [checked, setChecked] = useState(false);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(true);
   const [isConfirmed, setIsConfirmed] = useState(() => {
-    return localStorage.getItem(`confirmed_${guestId}`) === 'true';
+    return localStorage.getItem(`confirmed_${guestId}`) === "true";
   });
 
   useEffect(() => {
@@ -506,7 +620,8 @@ export default function GuestView({ isPreview = false }) {
             _id: "02",
             name: "Hữu Toàn",
             eventId: res.data,
-            qrDataUrl: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=preview&color=8c5a1a&bgcolor=ffffff",
+            qrDataUrl:
+              "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=preview&color=8c5a1a&bgcolor=ffffff",
           });
         } catch (err) {
           console.error(err);
@@ -537,8 +652,11 @@ export default function GuestView({ isPreview = false }) {
               const currentShortCode = guestData.shortCode;
 
               const isMatch =
-                (incomingId && (incomingId === currentDbId || incomingId === guestId)) ||
-                (incomingShortCode && (incomingShortCode === currentShortCode || incomingShortCode === guestId));
+                (incomingId &&
+                  (incomingId === currentDbId || incomingId === guestId)) ||
+                (incomingShortCode &&
+                  (incomingShortCode === currentShortCode ||
+                    incomingShortCode === guestId));
 
               if (isMatch) {
                 setChecked(true);
@@ -574,7 +692,7 @@ export default function GuestView({ isPreview = false }) {
 
   const handleConfirm = () => {
     setIsConfirmed(true);
-    localStorage.setItem(`confirmed_${guestId}`, 'true');
+    localStorage.setItem(`confirmed_${guestId}`, "true");
     toast.success("Xác nhận tham dự thành công!");
   };
 
@@ -582,8 +700,16 @@ export default function GuestView({ isPreview = false }) {
     return (
       <OuterWrapper>
         <Page>
-          <ContentWrapper style={{ width: "auto", justifyContent: "center", height: "100svh" }}>
-            <p style={{ color: "#c59346", margin: 0, fontWeight: "bold" }}>Đang tải thiệp mời…</p>
+          <ContentWrapper
+            style={{
+              width: "auto",
+              justifyContent: "center",
+              height: "100svh",
+            }}
+          >
+            <p style={{ color: "#c59346", margin: 0, fontWeight: "bold" }}>
+              Đang tải thiệp mời…
+            </p>
           </ContentWrapper>
         </Page>
       </OuterWrapper>
@@ -591,21 +717,42 @@ export default function GuestView({ isPreview = false }) {
   }
 
   // Derive simple Date strings
-  const eventDateObj = guest.eventId?.date ? new Date(guest.eventId.date) : new Date("2026-08-28T07:00:00");
-  const timeString = eventDateObj.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-  const dd = String(eventDateObj.getDate()).padStart(2, '0');
-  const mm = String(eventDateObj.getMonth() + 1).padStart(2, '0');
+  const eventDateObj = guest.eventId?.date
+    ? new Date(guest.eventId.date)
+    : new Date("2026-08-28T07:00:00");
+  const timeString = eventDateObj.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const dd = String(eventDateObj.getDate()).padStart(2, "0");
+  const mm = String(eventDateObj.getMonth() + 1).padStart(2, "0");
   const yyyy = eventDateObj.getFullYear();
   // Get index or ID for lucky number
-  const luckyNumber = (guest.guestIndex || guest._id?.substring(guest._id.length - 2) || "02").toUpperCase();
+  const luckyNumber = (
+    guest.guestIndex ||
+    guest._id?.substring(guest._id.length - 2) ||
+    "02"
+  ).toUpperCase();
 
   return (
     <OuterWrapper>
       <Page>
         <Logos>
-          <img src="/invitation_card/logo_1.png" alt="Logo 1" className="logo1" />
-          <img src="/invitation_card/logo_2.png" alt="Logo 2" className="logo2" />
-          <img src="/invitation_card/logo_3.png" alt="Logo 3" className="logo3" />
+          <img
+            src="/invitation_card/logo_1.png"
+            alt="Logo 1"
+            className="logo1"
+          />
+          <img
+            src="/invitation_card/logo_2.png"
+            alt="Logo 2"
+            className="logo2"
+          />
+          <img
+            src="/invitation_card/logo_3.png"
+            alt="Logo 3"
+            className="logo3"
+          />
         </Logos>
 
         <ContentWrapper>
@@ -615,13 +762,40 @@ export default function GuestView({ isPreview = false }) {
               <ThuMoi>Thư Mời</ThuMoi>
               <Subtitle>Trân trọng kính mời</Subtitle>
               <GuestName>{guest.name}</GuestName>
-              <img src="/invitation_card/divider.png" alt="Divider" style={{ width: '100%', maxWidth: '380px', objectFit: 'contain' }} />
+              <img
+                src="/invitation_card/divider.png"
+                alt="Divider"
+                style={{
+                  width: "100%",
+                  maxWidth: "380px",
+                  objectFit: "contain",
+                }}
+              />
 
               <EventInfo>
-                <div style={{ fontSize: "0.8rem", fontWeight: "400", color: '#7e4016' }}>Đến tham dự</div>
-                <div className="title">{guest.eventId?.title || "GIẢI PICKLEBALL"}</div>
-                <div style={{ fontSize: "0.8rem", maxWidth: "350px", margin: "0 auto", fontWeight: "900", color: '#7e4016' }}>
-                  {guest.eventId?.description || "CHÀO MỪNG KỶ NIỆM 30 NĂM THÀNH LẬP CÔNG TY TNHH TM DV SX TÂN DÂN (1996 - 2026)"}
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    fontWeight: "400",
+                    color: "#7e4016",
+                  }}
+                >
+                  Đến tham dự
+                </div>
+                <div className="title">
+                  {guest.eventId?.title || "GIẢI PICKLEBALL"}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    maxWidth: "350px",
+                    margin: "0 auto",
+                    fontWeight: "900",
+                    color: "#7e4016",
+                  }}
+                >
+                  {guest.eventId?.description ||
+                    "CHÀO MỪNG KỶ NIỆM 30 NĂM THÀNH LẬP CÔNG TY TNHH TM DV SX TÂN DÂN (1996 - 2026)"}
                 </div>
               </EventInfo>
 
@@ -629,15 +803,27 @@ export default function GuestView({ isPreview = false }) {
                 <div className="time">{timeString}</div>
                 <div className="divider"></div>
                 <div className="date">
-                  <span>{dd}.{mm}</span>
+                  <span>
+                    {dd}.{mm}
+                  </span>
                   <span>{yyyy}</span>
                 </div>
               </EventTimeLoc>
-              <LocationText>TẠI: {guest.eventId?.location || "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}</LocationText>
+              <LocationText>
+                TẠI:{" "}
+                {guest.eventId?.location ||
+                  "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}
+              </LocationText>
 
-              <BallImage src="/invitation_card/ball.png" alt="Pickleball" style={{ marginTop: '1vh', maxWidth: '350px' }} />
+              <BallImage
+                src="/invitation_card/ball.png"
+                alt="Pickleball"
+                style={{ marginTop: "0vh", maxWidth: "270px" }}
+              />
 
-              <ConfirmBtn onClick={handleConfirm} style={{ marginTop: '0.5vh' }}>Xác nhận tham dự</ConfirmBtn>
+              <ConfirmBtn onClick={handleConfirm} style={{ marginTop: "0vh" }}>
+                Xác nhận tham dự
+              </ConfirmBtn>
             </>
           )}
 
@@ -651,20 +837,31 @@ export default function GuestView({ isPreview = false }) {
               )}
 
               <InstructionText style={{ marginBottom: "2vh" }}>
-                Quý khách vui lòng trình mã QR để check in tại sự kiện và nhận được con số may mắn
+                Quý khách vui lòng trình mã QR để check in tại sự kiện và nhận
+                được con số may mắn
               </InstructionText>
 
-              <BallImage src="/invitation_card/ball.png" alt="Pickleball" style={{ maxWidth: '350px', marginTop: '4vh' }} />
+              <BallImage
+                src="/invitation_card/ball.png"
+                alt="Pickleball"
+                style={{ maxWidth: "270px", marginTop: "4vh" }}
+              />
 
               <EventTimeLoc style={{ marginTop: "3vh" }}>
                 <div className="time">{timeString}</div>
                 <div className="divider"></div>
                 <div className="date">
-                  <span>{dd}.{mm}</span>
+                  <span>
+                    {dd}.{mm}
+                  </span>
                   <span>{yyyy}</span>
                 </div>
               </EventTimeLoc>
-              <LocationText>TẠI: {guest.eventId?.location || "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}</LocationText>
+              <LocationText>
+                TẠI:{" "}
+                {guest.eventId?.location ||
+                  "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}
+              </LocationText>
 
               {guest.eventId?.date && (
                 <Countdown targetDate={guest.eventId.date} />
@@ -678,45 +875,101 @@ export default function GuestView({ isPreview = false }) {
               <ThuMoi>Thư Mời</ThuMoi>
               <Subtitle>Trân trọng kính mời</Subtitle>
               <GuestName>{guest.name}</GuestName>
-              <img src="/invitation_card/divider.png" alt="Divider" style={{ width: '100%', maxWidth: '380px', objectFit: 'contain' }} />
+              <img
+                src="/invitation_card/divider.png"
+                alt="Divider"
+                style={{
+                  width: "100%",
+                  maxWidth: "380px",
+                  objectFit: "contain",
+                }}
+              />
 
               {guest.qrDataUrl && (
                 <QRContainer style={{ margin: "0.5rem 0", padding: "1px" }}>
-                  <img src={guest.qrDataUrl} alt="QR Code" style={{ width: '80px', height: '80px' }} />
+                  <img
+                    src={guest.qrDataUrl}
+                    alt="QR Code"
+                    style={{ width: "80px", height: "80px" }}
+                  />
                 </QRContainer>
               )}
 
               <LuckyNumber>
-                Mã số của bạn là:<br />
+                Mã số của bạn là:
+                <br />
                 <div className="num">{luckyNumber}</div>
               </LuckyNumber>
 
-              <BallImage src="/invitation_card/ball.png" alt="Pickleball" style={{ maxWidth: '350px', margin: '1vh 0 0 0' }} />
+              <BallImage
+                src="/invitation_card/ball.png"
+                alt="Pickleball"
+                style={{ maxWidth: "270px", margin: "1vh 0 0 0" }}
+              />
 
-              <EventTimeLoc style={{ margin: '0.5rem 0' }}>
-                <div className="time" style={{ fontSize: '2.2rem' }}>{timeString}</div>
-                <div className="divider" style={{ height: '30px' }}></div>
-                <div className="date" style={{ fontSize: '0.9rem' }}>
-                  <span>{dd}.{mm}</span>
+              <EventTimeLoc style={{ margin: "0.5rem 0" }}>
+                <div className="time" style={{ fontSize: "2.2rem" }}>
+                  {timeString}
+                </div>
+                <div className="divider" style={{ height: "30px" }}></div>
+                <div className="date" style={{ fontSize: "0.9rem" }}>
+                  <span>
+                    {dd}.{mm}
+                  </span>
                   <span>{yyyy}</span>
                 </div>
               </EventTimeLoc>
-              <LocationText style={{ fontSize: '0.65rem' }}>TẠI: {guest.eventId?.location || "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}</LocationText>
+              <LocationText style={{ fontSize: "0.65rem" }}>
+                TẠI:{" "}
+                {guest.eventId?.location ||
+                  "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}
+              </LocationText>
 
               <ScheduleList>
-                <div className="header">Theo dõi lịch trình diễn ra sự kiện</div>
-                {SCHEDULE_DATA.map((item, idx) => (
-                  <div key={idx} className={`item ${item.isActive ? 'active' : ''}`}>
-                    <div className="content-box">
-                      <div className="time">{item.time}:</div>
-                      <div className="label">{item.label}</div>
+                <div className="header">
+                  Theo dõi lịch trình diễn ra sự kiện
+                </div>
+                {!isScheduleOpen && (
+                  <button
+                    type="button"
+                    className="toggle-button"
+                    aria-label="Mở lịch trình sự kiện"
+                    aria-expanded={false}
+                    onClick={() => setIsScheduleOpen(true)}
+                  >
+                    <span className="arrow arrow-down" aria-hidden="true" />
+                  </button>
+                )}
+                <div
+                  className={`schedule-items ${isScheduleOpen ? "open" : "closed"}`}
+                  aria-hidden={!isScheduleOpen}
+                >
+                  {SCHEDULE_DATA.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`item ${item.isActive ? "active" : ""}`}
+                    >
+                      <div className="content-box">
+                        <div className="time">{item.time}:</div>
+                        <div className="label">{item.label}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                {isScheduleOpen && (
+                  <button
+                    type="button"
+                    className="toggle-button"
+                    aria-label="Đóng lịch trình sự kiện"
+                    aria-expanded={true}
+                    onClick={() => setIsScheduleOpen(false)}
+                  >
+                    <span className="arrow arrow-up" aria-hidden="true" />
+                  </button>
+                )}
               </ScheduleList>
             </>
           )}
-
         </ContentWrapper>
       </Page>
     </OuterWrapper>
