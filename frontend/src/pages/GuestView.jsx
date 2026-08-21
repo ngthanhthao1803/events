@@ -602,7 +602,7 @@ export default function GuestView({ isPreview = false }) {
   const { guestId, eventId } = useParams();
   const [guest, setGuest] = useState(null);
   const [checked, setChecked] = useState(false);
-  const [isScheduleOpen, setIsScheduleOpen] = useState(true);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(() => {
     return localStorage.getItem(`confirmed_${guestId}`) === "true";
   });
