@@ -464,9 +464,13 @@ export default function EventDetail() {
     const token = localStorage.getItem("token");
     const s = io(getSocketUrl(), { auth: { token } });
     s.emit("joinEvent", id);
-    s.on("guestCheckedIn", ({ guestId }) => {
+    s.on("guestCheckedIn", ({ guestId, shortCode }) => {
       setGuests((prev) =>
-        prev.map((g) => (g._id === guestId ? { ...g, checkedIn: true } : g)),
+        prev.map((g) =>
+          g._id === guestId || (shortCode && g.shortCode === shortCode)
+            ? { ...g, checkedIn: true }
+            : g,
+        ),
       );
       toast.success("Khách đã check‑in (real‑time)");
     });

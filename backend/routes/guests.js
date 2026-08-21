@@ -58,7 +58,7 @@ router.get("/guest/:guestId", async (req, res) => {
     if (!guest) {
       guest = await Guest.findOne({ shortCode: req.params.guestId }).populate("eventId");
     }
-    
+
     if (!guest) return res.status(404).json({ message: "Guest not found" });
     const qrDataUrl = await generateQR(guest.qrToken);
     const guestObj = guest.toObject();
@@ -86,8 +86,11 @@ router.post("/guest/:guestId/checkin", async (req, res) => {
     guest.checkedIn = true;
     await guest.save();
 
-    ioInstance?.to(guest.eventId.toString()).emit("guestCheckedIn", {
+    const eventIdStr = guest.eventId.toString();
+    ioInstance?.to(eventIdStr).emit("guestCheckedIn", {
       guestId: guest._id.toString(),
+      shortCode: guest.shortCode,
+      guest: guest.toObject(),
     });
 
     res.json({ message: "Check-in successful", guest });

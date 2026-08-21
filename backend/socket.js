@@ -19,7 +19,10 @@ export const initSocket = (httpServer) => {
       return next();
     }
     const payload = verifyToken(token);
-    if (!payload) return next(new Error('Invalid token'));
+    if (!payload) {
+      socket.role = 'guest';
+      return next();
+    }
     // attach admin info to socket (if needed later)
     socket.admin = payload;
     socket.role = 'admin';
@@ -27,9 +30,9 @@ export const initSocket = (httpServer) => {
   });
 
   io.on('connection', (socket) => {
-    // admin tells which event room to join
+    // admin or guest tells which event room to join
     socket.on('joinEvent', (eventId) => {
-      if (eventId) socket.join(eventId);
+      if (eventId) socket.join(eventId.toString());
     });
     // optional: handle disconnect
     socket.on('disconnect', () => {

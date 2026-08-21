@@ -1,12 +1,15 @@
 export function getSocketUrl() {
-  const configuredUrl = import.meta.env.VITE_SOCKET_URL;
-
-  if (configuredUrl) {
-    return configuredUrl;
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1")
+  ) {
+    return "http://localhost:3001";
   }
 
-  if (import.meta.env.DEV) {
-    return "http://localhost:3001";
+  const configuredUrl = import.meta.env.VITE_SOCKET_URL;
+  if (configuredUrl) {
+    return configuredUrl;
   }
 
   return window.location.origin;

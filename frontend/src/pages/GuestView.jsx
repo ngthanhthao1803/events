@@ -492,13 +492,16 @@ export default function GuestView({ isPreview = false }) {
   const [isConfirmed, setIsConfirmed] = useState(() => {
     return localStorage.getItem(`confirmed_${guestId}`) === 'true';
   });
-  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
+    let socketInstance = null;
+    let isMounted = true;
+
     if (isPreview) {
       const fetchPreview = async () => {
         try {
           const res = await axios.get(`/api/events/${eventId}`);
+          if (!isMounted) return;
           setGuest({
             _id: "02",
             name: "Hữu Toàn",
@@ -514,17 +517,41 @@ export default function GuestView({ isPreview = false }) {
       const fetchGuest = async () => {
         try {
           const res = await axios.get(`/api/guests/guest/${guestId}`);
-          setGuest(res.data);
-          setChecked(res.data.checkedIn);
-          // Assuming we use local state or another field for confirmation later
-          if (res.data.eventId) {
-            const s = io(getSocketUrl());
-            const roomToJoin = res.data.eventId._id || res.data.eventId;
-            s.emit("joinEvent", roomToJoin);
-            s.on("guestCheckedIn", ({ guestId: updatedId }) => {
-              if (updatedId === guestId) {
+          if (!isMounted) return;
+          const guestData = res.data;
+          setGuest(guestData);
+          setChecked(Boolean(guestData.checkedIn));
+
+          if (guestData.eventId) {
+            const rawEventId = guestData.eventId._id || guestData.eventId;
+            const roomToJoin = rawEventId.toString();
+
+            socketInstance = io(getSocketUrl());
+
+            socketInstance.emit("joinEvent", roomToJoin);
+
+            socketInstance.on("guestCheckedIn", (payload) => {
+              const incomingId = payload?.guestId;
+              const incomingShortCode = payload?.shortCode;
+              const currentDbId = guestData._id?.toString();
+              const currentShortCode = guestData.shortCode;
+
+              const isMatch =
+                (incomingId && (incomingId === currentDbId || incomingId === guestId)) ||
+                (incomingShortCode && (incomingShortCode === currentShortCode || incomingShortCode === guestId));
+
+              if (isMatch) {
                 setChecked(true);
-                toast.success("Bạn đã được check‑in!", {
+                setIsConfirmed(true);
+                setGuest((prev) =>
+                  prev
+                    ? { ...prev, checkedIn: true, ...(payload?.guest || {}) }
+                    : prev,
+                );
+                if (guestId) {
+                  localStorage.setItem(`confirmed_${guestId}`, "true");
+                }
+                toast.success("Bạn đã được check‑in thành công!", {
                   style: {
                     background: "#c59346",
                     color: "#fff",
@@ -532,7 +559,6 @@ export default function GuestView({ isPreview = false }) {
                 });
               }
             });
-            setSocket(s);
           }
         } catch (err) {
           console.error(err);
@@ -541,7 +567,8 @@ export default function GuestView({ isPreview = false }) {
       fetchGuest();
     }
     return () => {
-      if (socket) socket.disconnect();
+      isMounted = false;
+      if (socketInstance) socketInstance.disconnect();
     };
   }, [guestId, eventId, isPreview]);
 
