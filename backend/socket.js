@@ -12,14 +12,17 @@ export const initSocket = (httpServer) => {
     // you can configure more options here
   });
 
-  // Simple JWT auth for admin sockets (admin must send token in query string)
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
-    if (!token) return next(new Error('Authentication error'));
+    if (!token) {
+      socket.role = 'guest';
+      return next();
+    }
     const payload = verifyToken(token);
     if (!payload) return next(new Error('Invalid token'));
     // attach admin info to socket (if needed later)
     socket.admin = payload;
+    socket.role = 'admin';
     next();
   });
 

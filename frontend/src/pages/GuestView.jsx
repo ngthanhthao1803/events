@@ -519,7 +519,8 @@ export default function GuestView({ isPreview = false }) {
           // Assuming we use local state or another field for confirmation later
           if (res.data.eventId) {
             const s = io(getSocketUrl());
-            s.emit("joinEvent", res.data.eventId);
+            const roomToJoin = res.data.eventId._id || res.data.eventId;
+            s.emit("joinEvent", roomToJoin);
             s.on("guestCheckedIn", ({ guestId: updatedId }) => {
               if (updatedId === guestId) {
                 setChecked(true);
@@ -609,7 +610,7 @@ export default function GuestView({ isPreview = false }) {
 
               <BallImage src="/invitation_card/ball.png" alt="Pickleball" style={{ marginTop: '1vh', maxWidth: '350px' }} />
 
-              <ConfirmBtn onClick={handleConfirm} style={{ marginTop: '4vh' }}>Xác nhận tham dự</ConfirmBtn>
+              <ConfirmBtn onClick={handleConfirm} style={{ marginTop: '0.5vh' }}>Xác nhận tham dự</ConfirmBtn>
             </>
           )}
 

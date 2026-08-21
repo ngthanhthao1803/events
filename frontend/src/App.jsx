@@ -86,7 +86,7 @@ const ThemeButton = styled.button`
 
 function Shell({ theme, toggleTheme }) {
   const location = useLocation();
-  const hideHeader = /^\/guest\/[^/]+$/.test(location.pathname);
+  const hideHeader = /^\/guest\/[^/]+(\/.*)?$/.test(location.pathname);
 
   return (
     <>
@@ -109,7 +109,7 @@ function Shell({ theme, toggleTheme }) {
         <Route path="/admin/events" element={<EventList />} />
         <Route path="/admin/events/:id" element={<EventDetail />} />
         <Route path="/guest/preview/:eventId" element={<GuestView isPreview={true} />} />
-        <Route path="/guest/:guestId" element={<GuestView isPreview={false} />} />
+        <Route path="/guest/:guestId/*" element={<GuestView isPreview={false} />} />
       </Routes>
     </>
   );

@@ -485,8 +485,22 @@ export default function EventDetail() {
     toast.success("Thêm khách thành công");
   };
 
+  const slugify = (str) => {
+    if (!str) return 'su-kien';
+    return String(str)
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase()
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  };
+
   const copyLink = async (guestId) => {
-    const link = `${window.location.origin}/guest/${guestId}`;
+    const eventSlug = slugify(event?.title);
+    const link = `${window.location.origin}/guest/${guestId}/${eventSlug}`;
     await navigator.clipboard.writeText(link);
     setCopiedId(guestId);
     setTimeout(() => setCopiedId(null), 2000);
