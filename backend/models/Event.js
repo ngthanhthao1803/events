@@ -7,6 +7,11 @@ const EventSchema = new Schema({
   location: { type: String },
   description: { type: String },
   createdBy: { type: String },
+  schedule: [{
+    time: { type: String, required: true },
+    label: { type: String, required: true },
+    isActive: { type: Boolean, default: false }
+  }],
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -458,7 +458,7 @@ const ScheduleList = styled.div`
       &::before {
         content: "";
         position: absolute;
-        left: -3px;
+        left: 5px;
         top: 50%;
         transform: translateY(-50%);
         width: 14px;
@@ -623,6 +623,29 @@ export default function GuestView({ isPreview = false }) {
             qrDataUrl:
               "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=preview&color=8c5a1a&bgcolor=ffffff",
           });
+
+          if (eventId) {
+            socketInstance = io(getSocketUrl());
+            socketInstance.emit("joinEvent", eventId.toString());
+
+            socketInstance.on("eventUpdated", (updatedEvent) => {
+              if (updatedEvent?._id?.toString() === eventId?.toString()) {
+                setGuest((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        eventId: {
+                          ...(typeof prev.eventId === "object"
+                            ? prev.eventId
+                            : {}),
+                          ...updatedEvent,
+                        },
+                      }
+                    : prev,
+                );
+              }
+            });
+          }
         } catch (err) {
           console.error(err);
         }
@@ -645,6 +668,23 @@ export default function GuestView({ isPreview = false }) {
 
             socketInstance.emit("joinEvent", roomToJoin);
 
+            socketInstance.on("eventUpdated", (updatedEvent) => {
+              if (!updatedEvent) return;
+              setGuest((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      eventId: {
+                        ...(typeof prev.eventId === "object"
+                          ? prev.eventId
+                          : {}),
+                        ...updatedEvent,
+                      },
+                    }
+                  : prev,
+              );
+            });
+
             socketInstance.on("guestCheckedIn", (payload) => {
               const incomingId = payload?.guestId;
               const incomingShortCode = payload?.shortCode;
@@ -661,11 +701,21 @@ export default function GuestView({ isPreview = false }) {
               if (isMatch) {
                 setChecked(true);
                 setIsConfirmed(true);
-                setGuest((prev) =>
-                  prev
-                    ? { ...prev, checkedIn: true, ...(payload?.guest || {}) }
-                    : prev,
-                );
+                setGuest((prev) => {
+                  if (!prev) return prev;
+                  const currentEvent =
+                    payload?.guest?.eventId &&
+                    typeof payload.guest.eventId === "object"
+                      ? payload.guest.eventId
+                      : prev.eventId;
+
+                  return {
+                    ...prev,
+                    ...(payload?.guest || {}),
+                    checkedIn: true,
+                    eventId: currentEvent,
+                  };
+                });
                 if (guestId) {
                   localStorage.setItem(`confirmed_${guestId}`, "true");
                 }
@@ -944,7 +994,10 @@ export default function GuestView({ isPreview = false }) {
                   className={`schedule-items ${isScheduleOpen ? "open" : "closed"}`}
                   aria-hidden={!isScheduleOpen}
                 >
-                  {SCHEDULE_DATA.map((item, idx) => (
+                  {(guest.eventId?.schedule?.length > 0
+                    ? guest.eventId.schedule
+                    : SCHEDULE_DATA
+                  ).map((item, idx) => (
                     <div
                       key={idx}
                       className={`item ${item.isActive ? "active" : ""}`}

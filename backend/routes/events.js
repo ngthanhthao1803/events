@@ -1,5 +1,6 @@
 import express from 'express';
 import Event from '../models/Event.js';
+import { ioInstance } from '../socket.js';
 
 const router = express.Router();
 
@@ -40,6 +41,10 @@ router.put('/:id', async (req, res) => {
   try {
     const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!event) return res.status(404).json({ message: 'Event not found' });
+    
+    // Broadcast realtime event update to room
+    ioInstance?.to(event._id.toString()).emit('eventUpdated', event);
+
     res.json(event);
   } catch (err) {
     res.status(400).json({ error: err.message });

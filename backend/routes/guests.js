@@ -86,7 +86,9 @@ router.post("/guest/:guestId/checkin", async (req, res) => {
     guest.checkedIn = true;
     await guest.save();
 
-    const eventIdStr = guest.eventId.toString();
+    await guest.populate("eventId");
+
+    const eventIdStr = (guest.eventId._id || guest.eventId).toString();
     ioInstance?.to(eventIdStr).emit("guestCheckedIn", {
       guestId: guest._id.toString(),
       shortCode: guest.shortCode,
