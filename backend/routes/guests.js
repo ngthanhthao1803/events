@@ -46,6 +46,35 @@ router.get("/:eventId", async (req, res) => {
   }
 });
 
+// Lookup guest by shortCode, qrToken or ID (GET /api/guests/lookup/:code)
+router.get("/lookup/:code", async (req, res) => {
+  try {
+    const code = req.params.code?.trim();
+    if (!code) return res.status(400).json({ message: "Vui lòng nhập mã" });
+
+    let guest = await Guest.findOne({
+      $or: [
+        { shortCode: code },
+        { shortCode: code.toUpperCase() },
+        { qrToken: code },
+      ],
+    }).populate("eventId");
+
+    if (!guest && /^[0-9a-fA-F]{24}$/.test(code)) {
+      guest = await Guest.findById(code).populate("eventId");
+    }
+
+    if (!guest) return res.status(404).json({ message: "Không tìm thấy khách mời với mã này" });
+
+    const qrDataUrl = await generateQR(guest.qrToken);
+    const guestObj = guest.toObject();
+    guestObj.qrDataUrl = qrDataUrl;
+    res.json(guestObj);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Public endpoint to get guest info (including event) by guest ID (GET /api/guests/guest/:guestId)
 router.get("/guest/:guestId", async (req, res) => {
   try {

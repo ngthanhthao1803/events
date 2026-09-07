@@ -6,6 +6,70 @@ import QRScanner from "../components/QRScanner";
 import { io } from "socket.io-client";
 import { toast } from "react-hot-toast";
 import { getSocketUrl } from "../utils/socketUrl";
+import { INVITATION_TEMPLATES, getTemplateById } from "../utils/invitationTemplates";
+
+const TemplateSelectorGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+`;
+
+const TemplateChoiceCard = styled.div`
+  background: ${({ $selected, theme }) =>
+    $selected
+      ? (theme.isDark ? "rgba(10, 185, 194, 0.18)" : "rgba(10, 185, 194, 0.12)")
+      : (theme.isDark ? "rgba(255, 255, 255, 0.04)" : "#f8fafc")};
+  border: 2px solid ${({ $selected, theme }) =>
+    $selected ? "#0ab9c2" : (theme.isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)")};
+  border-radius: 14px;
+  padding: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  &:hover {
+    border-color: #0ab9c2;
+    transform: translateY(-2px);
+  }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .icon {
+    font-size: 1.4rem;
+  }
+
+  .check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #0ab9c2;
+    color: #041216;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
+
+  .name {
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: ${({ theme }) => theme.text};
+  }
+
+  .badge {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: ${({ theme }) => theme.textMuted};
+  }
+`;
 
 const PageShell = styled.div`
   position: relative;
@@ -54,16 +118,16 @@ const Content = styled.div`
 `;
 
 const Hero = styled.section`
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.03)
-  );
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: ${({ theme }) =>
+    theme.isDark
+      ? "linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))"
+      : "#ffffff"};
+  border: 1px solid ${({ theme }) => theme.cardBorder};
   backdrop-filter: blur(16px);
   border-radius: 24px;
   padding: 1.5rem;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  box-shadow: ${({ theme }) =>
+    theme.isDark ? "0 24px 60px rgba(0, 0, 0, 0.18)" : "0 4px 20px rgba(0, 0, 0, 0.05)"};
   margin-bottom: 1.25rem;
 `;
 
@@ -73,8 +137,8 @@ const Eyebrow = styled.div`
   gap: 0.5rem;
   padding: 0.45rem 0.8rem;
   border-radius: 999px;
-  background: rgba(11, 185, 194, 0.14);
-  color: #8cf1f6;
+  background: ${({ theme }) => (theme.isDark ? "rgba(11, 185, 194, 0.14)" : "rgba(11, 185, 194, 0.1)")};
+  color: ${({ theme }) => (theme.isDark ? "#8cf1f6" : "#0891b2")};
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -99,11 +163,12 @@ const EventTitle = styled.h2`
   font-size: clamp(1.8rem, 4vw, 3rem);
   line-height: 1.05;
   letter-spacing: -0.04em;
+  color: ${({ theme }) => theme.text};
 `;
 
 const EventMeta = styled.p`
   margin-top: 0.6rem;
-  color: rgba(255, 255, 255, 0.68);
+  color: ${({ theme }) => theme.textMuted};
   font-size: 0.98rem;
 `;
 
@@ -121,13 +186,14 @@ const EditInput = styled.input`
   box-sizing: border-box;
   padding: 0.8rem 1rem;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: inherit;
+  border: 1px solid ${({ theme }) => theme.inputBorder};
+  background: ${({ theme }) => theme.inputBg};
+  color: ${({ theme }) => theme.text};
   font-family: inherit;
   font-size: 1rem;
   outline: none;
   &:focus { border-color: #0ab9c2; }
+  &::placeholder { color: ${({ theme }) => theme.inputPlaceholder}; }
 `;
 
 const EditTextarea = styled.textarea`
@@ -135,15 +201,16 @@ const EditTextarea = styled.textarea`
   box-sizing: border-box;
   padding: 0.8rem 1rem;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: inherit;
+  border: 1px solid ${({ theme }) => theme.inputBorder};
+  background: ${({ theme }) => theme.inputBg};
+  color: ${({ theme }) => theme.text};
   font-family: inherit;
   font-size: 1rem;
   outline: none;
   resize: vertical;
   min-height: 80px;
   &:focus { border-color: #0ab9c2; }
+  &::placeholder { color: ${({ theme }) => theme.inputPlaceholder}; }
 `;
 
 const ActionRow = styled.div`
@@ -162,28 +229,31 @@ const StatsGrid = styled.div`
 const StatCard = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.35rem;
   border-radius: 12px;
-  padding: 0.2rem 0.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.35rem 0.65rem;
+  background: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.04)" : "#f8fafc")};
+  border: 1px solid ${({ theme }) => theme.cardBorder};
 `;
 
 const StatLabel = styled.span`
-  color: rgba(255, 255, 255, 0.66);
+  color: ${({ theme }) => theme.textMuted};
   font-size: 0.85rem;
 `;
 
 const StatValue = styled.span`
   font-size: 1.1rem;
   font-weight: 800;
+  color: ${({ theme }) => theme.text};
 `;
 
 const Panel = styled.section`
-  background: rgba(15, 18, 28, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: ${({ theme }) => (theme.isDark ? "rgba(15, 18, 28, 0.82)" : "#ffffff")};
+  border: 1px solid ${({ theme }) => theme.cardBorder};
   border-radius: 24px;
   padding: 1.25rem;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: ${({ theme }) =>
+    theme.isDark ? "0 18px 40px rgba(0, 0, 0, 0.2)" : "0 4px 20px rgba(0, 0, 0, 0.05)"};
   margin-bottom: 1rem;
 `;
 
@@ -199,6 +269,7 @@ const SectionTitle = styled.h3`
   margin: 0;
   font-size: 1.05rem;
   letter-spacing: -0.02em;
+  color: ${({ theme }) => theme.text};
 `;
 
 const IconButton = styled.button`
@@ -224,7 +295,7 @@ const IconButton = styled.button`
 
 const MutedText = styled.p`
   margin: 0.2rem 0 0;
-  color: rgba(255, 255, 255, 0.62);
+  color: ${({ theme }) => theme.textMuted};
   font-size: 0.92rem;
 `;
 
@@ -236,9 +307,9 @@ const ReorderButtonGroup = styled.div`
 `;
 
 const ReorderButton = styled.button`
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.08)" : "#f1f5f9")};
+  border: 1px solid ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.1)")};
+  color: inherit;
   border-radius: 4px;
   width: 24px;
   height: 18px;
@@ -252,7 +323,7 @@ const ReorderButton = styled.button`
   &:hover:not(:disabled) {
     background: rgba(11, 185, 194, 0.3);
     border-color: #0ab9c2;
-    color: #8cf1f6;
+    color: #0ab9c2;
   }
 
   &:disabled {
@@ -265,7 +336,7 @@ const DragHandle = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.35);
+  color: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.35)" : "rgba(0, 0, 0, 0.35)")};
   cursor: grab;
   padding: 0 4px;
   user-select: none;
@@ -276,8 +347,26 @@ const DragHandle = styled.div`
   }
 
   &:hover {
-    color: rgba(255, 255, 255, 0.8);
+    color: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.8)")};
   }
+`;
+
+const ActiveCheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  background: ${({ $isActive, theme }) =>
+    $isActive
+      ? "rgba(10, 185, 194, 0.2)"
+      : (theme.isDark ? "rgba(255, 255, 255, 0.05)" : "#f1f5f9")};
+  color: ${({ $isActive }) => ($isActive ? "#0ab9c2" : "inherit")};
+  border: 1px solid ${({ $isActive }) => ($isActive ? "#0ab9c2" : "transparent")};
+  transition: all 0.2s ease;
 `;
 
 const ScheduleRowItem = styled.div`
@@ -309,13 +398,13 @@ const Field = styled.input`
   box-sizing: border-box;
   padding: 0.9rem 1rem;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: inherit;
+  border: 1px solid ${({ theme }) => theme.inputBorder};
+  background: ${({ theme }) => theme.inputBg};
+  color: ${({ theme }) => theme.text};
   outline: none;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.42);
+    color: ${({ theme }) => theme.inputPlaceholder};
   }
 
   &:focus {
@@ -353,25 +442,31 @@ const PrimaryButton = styled(Button)`
 `;
 
 const SecondaryButton = styled(Button)`
-  background: rgba(255, 255, 255, 0.08);
+  background: ${({ theme }) => theme.buttonSecondaryBg};
   color: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid ${({ theme }) => theme.buttonSecondaryBorder};
+  box-shadow: ${({ theme }) => (theme.isDark ? "none" : "0 1px 3px rgba(0, 0, 0, 0.05)")};
+
+  &:hover {
+    background: ${({ theme }) => theme.buttonSecondaryHover};
+    border-color: rgba(10, 185, 194, 0.4);
+  }
 `;
 
 const ScannerWrap = styled.div`
   margin-top: 1rem;
   padding: 1rem;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px dashed rgba(255, 255, 255, 0.12);
+  background: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.04)" : "#f8fafc")};
+  border: 1px dashed ${({ theme }) => theme.cardBorder};
 `;
 
 const ScannerResult = styled.div`
   margin-top: 1rem;
   padding: 1rem;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(11, 185, 194, 0.18);
+  background: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.06)" : "#f0fdfa")};
+  border: 1px solid rgba(11, 185, 194, 0.25);
 `;
 
 const ScannerResultHeader = styled.div`
@@ -385,11 +480,12 @@ const ScannerResultHeader = styled.div`
 const ScannerResultTitle = styled.h4`
   margin: 0;
   font-size: 1rem;
+  color: ${({ theme }) => theme.text};
 `;
 
 const ScannerResultMeta = styled.p`
   margin: 0.2rem 0 0;
-  color: rgba(255, 255, 255, 0.68);
+  color: ${({ theme }) => theme.textMuted};
   font-size: 0.92rem;
 `;
 
@@ -405,8 +501,8 @@ const GuestCard = styled.div`
   align-items: start;
   padding: 1rem;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.06)" : "#f8fafc")};
+  border: 1px solid ${({ theme }) => theme.cardBorder};
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
@@ -414,8 +510,8 @@ const GuestCard = styled.div`
 
   &:hover {
     transform: translateY(-2px);
-    border-color: rgba(11, 185, 194, 0.26);
-    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(11, 185, 194, 0.4);
+    background: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.08)" : "#f1f5f9")};
   }
 
   @media (max-width: 720px) {
@@ -431,11 +527,12 @@ const GuestName = styled.div`
   font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+  color: ${({ theme }) => theme.text};
 `;
 
 const GuestEmail = styled.div`
   margin-top: 0.2rem;
-  color: rgba(255, 255, 255, 0.68);
+  color: ${({ theme }) => theme.textMuted};
 `;
 
 const StatusPill = styled.div`
@@ -447,9 +544,19 @@ const StatusPill = styled.div`
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: ${({ $checkedIn }) => ($checkedIn ? "#9ef3b2" : "#ffb0b0")};
+  color: ${({ $checkedIn, theme }) =>
+    $checkedIn
+      ? theme.isDark
+        ? "#9ef3b2"
+        : "#16a34a"
+      : theme.isDark
+        ? "#ffb0b0"
+        : "#dc2626"};
   background: ${({ $checkedIn }) =>
     $checkedIn ? "rgba(34, 197, 94, 0.12)" : "rgba(239, 68, 68, 0.12)"};
+  border: 1px solid
+    ${({ $checkedIn }) =>
+    $checkedIn ? "rgba(34, 197, 94, 0.25)" : "rgba(239, 68, 68, 0.25)"};
 `;
 
 const GuestTools = styled.div`
@@ -480,12 +587,54 @@ const GhostButton = styled(SecondaryButton)`
   padding: 0.4rem 0.6rem;
   font-size: 0.8rem;
   border-radius: 8px;
+  background: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.08)" : "#f1f5f9")};
+`;
+
+const DangerGhostButton = styled(GhostButton)`
+  color: ${({ theme }) => (theme.isDark ? "#ffb0b0" : "#dc2626")};
+  border-color: ${({ theme }) => (theme.isDark ? "rgba(239, 68, 68, 0.4)" : "rgba(220, 38, 38, 0.25)")};
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+  }
+`;
+
+const DangerButton = styled(SecondaryButton)`
+  color: ${({ theme }) => (theme.isDark ? "#ffb0b0" : "#dc2626")};
+  border-color: ${({ theme }) => (theme.isDark ? "rgba(239, 68, 68, 0.5)" : "rgba(220, 38, 38, 0.35)")};
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+  }
+`;
+
+const DangerIconButton = styled(IconButton)`
+  width: 28px;
+  height: 28px;
+  color: ${({ theme }) => (theme.isDark ? "#ffb0b0" : "#dc2626")};
+  background: ${({ theme }) => (theme.isDark ? "rgba(239, 68, 68, 0.15)" : "rgba(239, 68, 68, 0.1)")};
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+  }
 `;
 
 const SmallPrimaryButton = styled(PrimaryButton)`
   padding: 0.4rem 0.8rem;
   font-size: 0.8rem;
   border-radius: 8px;
+`;
+
+const AddGuestBox = styled.div`
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: ${({ theme }) => (theme.isDark ? "rgba(255, 255, 255, 0.03)" : "#f8fafc")};
+  border-radius: 16px;
+  border: 1px solid ${({ theme }) => theme.cardBorder};
 `;
 
 const DEFAULT_SCHEDULE = [
@@ -516,7 +665,7 @@ export default function EventDetail() {
   const [copiedId, setCopiedId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingSchedule, setIsEditingSchedule] = useState(false);
-  const [editData, setEditData] = useState({ title: "", date: "", location: "", description: "", schedule: [] });
+  const [editData, setEditData] = useState({ title: "", date: "", location: "", description: "", schedule: [], template: "classic-gold" });
   const [draggedScheduleIndex, setDraggedScheduleIndex] = useState(null);
   const [editingGuestId, setEditingGuestId] = useState(null);
   const [editGuestData, setEditGuestData] = useState({ name: "", email: "" });
@@ -539,6 +688,7 @@ export default function EventDetail() {
       location: res.data.location || "",
       description: res.data.description || "",
       schedule: scheduleData,
+      template: res.data.template || "classic-gold",
     });
   };
 
@@ -575,6 +725,7 @@ export default function EventDetail() {
           location: updatedEvent.location || "",
           description: updatedEvent.description || "",
           schedule: updatedEvent.schedule || [],
+          template: updatedEvent.template || "classic-gold",
         });
       }
     });
@@ -584,6 +735,26 @@ export default function EventDetail() {
     fetchGuests();
     return () => s.disconnect();
   }, [id]);
+
+  const handleSelectTemplate = async (templateId) => {
+    try {
+      const payload = {
+        title: event?.title || editData.title,
+        date: event?.date || new Date(),
+        location: event?.location || editData.location,
+        description: event?.description || editData.description,
+        schedule: event?.schedule || editData.schedule || [],
+        template: templateId,
+      };
+      const res = await axios.put(`/api/events/${id}`, payload);
+      setEvent(res.data);
+      setEditData((prev) => ({ ...prev, template: templateId }));
+      const tInfo = getTemplateById(templateId);
+      toast.success(`Đã đổi mẫu thiệp sang "${tInfo.name}"!`);
+    } catch (err) {
+      toast.error("Lỗi cập nhật mẫu thiệp: " + err.message);
+    }
+  };
 
   const handleQuickActiveSchedule = async (idx) => {
     try {
@@ -823,18 +994,42 @@ export default function EventDetail() {
                         onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                       />
 
+                      <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem' }}>
+                        <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '0.4rem' }}>
+                          Mẫu thiệp mời:
+                        </label>
+                        <TemplateSelectorGrid>
+                          {INVITATION_TEMPLATES.map((tmpl) => {
+                            const isSelected = (editData.template || "classic-gold") === tmpl.id;
+                            return (
+                              <TemplateChoiceCard
+                                key={tmpl.id}
+                                type="button"
+                                $selected={isSelected}
+                                onClick={() => setEditData({ ...editData, template: tmpl.id })}
+                              >
+                                <div className="top-row">
+                                  {isSelected && <span className="check">✓</span>}
+                                </div>
+                                <div className="name">{tmpl.name}</div>
+                                <div className="badge">{tmpl.tagline}</div>
+                              </TemplateChoiceCard>
+                            );
+                          })}
+                        </TemplateSelectorGrid>
+                      </div>
+
                       <ActionRow>
                         <PrimaryButton type="submit">Lưu</PrimaryButton>
                         <SecondaryButton type="button" onClick={() => setIsEditing(false)}>
                           Hủy
                         </SecondaryButton>
-                        <SecondaryButton
+                        <DangerButton
                           type="button"
                           onClick={handleDeleteEvent}
-                          style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ffb0b0' }}
                         >
                           Xóa
-                        </SecondaryButton>
+                        </DangerButton>
                       </ActionRow>
                     </EditForm>
                   ) : isEditingSchedule ? (
@@ -918,7 +1113,7 @@ export default function EventDetail() {
                             <EditInput
                               type="text"
                               placeholder="Nội dung hoạt động"
-                              style={{ flex: 2, minWidth: '130px', padding: '0.5rem' }}
+                              style={{ flex: 3, padding: '0.5rem' }}
                               value={item.label}
                               onChange={(e) => {
                                 const newSchedule = [...editData.schedule];
@@ -926,28 +1121,33 @@ export default function EventDetail() {
                                 setEditData({ ...editData, schedule: newSchedule });
                               }}
                             />
-                            <label title="Đánh dấu mốc đang sáng" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                            <ActiveCheckboxLabel
+                              title="Tích chọn nếu sự kiện này đang diễn ra thực tế lúc này"
+                              $isActive={item.isActive}
+                            >
                               <input
-                                type="radio"
-                                name="scheduleActive"
-                                checked={item.isActive}
-                                onChange={() => {
-                                  const newSchedule = editData.schedule.map((s, i) => ({ ...s, isActive: i === idx }));
+                                type="checkbox"
+                                checked={item.isActive || false}
+                                onChange={(e) => {
+                                  const newSchedule = editData.schedule.map((s, i) => ({
+                                    ...s,
+                                    isActive: i === idx ? e.target.checked : false,
+                                  }));
                                   setEditData({ ...editData, schedule: newSchedule });
                                 }}
                               />
-                            </label>
-                            <IconButton
+                              <span>Đang diễn ra</span>
+                            </ActiveCheckboxLabel>
+                            <SecondaryButton
                               type="button"
-                              title="Xóa mốc"
-                              style={{ width: '28px', height: '28px', color: '#ffb0b0', background: 'rgba(239, 68, 68, 0.15)', flexShrink: 0 }}
+                              style={{ padding: '0.4rem 0.6rem', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                               onClick={() => {
                                 const newSchedule = editData.schedule.filter((_, i) => i !== idx);
                                 setEditData({ ...editData, schedule: newSchedule });
                               }}
                             >
-                              ×
-                            </IconButton>
+                              Xóa
+                            </SecondaryButton>
                           </ScheduleRowItem>
                         ))}
                         {editData.schedule.length === 0 && (
@@ -967,6 +1167,7 @@ export default function EventDetail() {
                       <EventMeta>
                         {new Date(event.date).toLocaleString()}
                         {event.location && ` • ${event.location}`}
+                        {` • Mẫu thiệp: ${getTemplateById(event.template).icon} ${getTemplateById(event.template).name}`}
                       </EventMeta>
                       <ActionRow style={{ marginTop: '1rem', flexWrap: 'wrap' }}>
                         <SecondaryButton type="button" onClick={() => setIsEditing(true)}>
@@ -1021,6 +1222,53 @@ export default function EventDetail() {
                 </StatCard>
               </StatsGrid>
             </Hero>
+
+            {/* <Panel>
+              <SectionHeader style={{ marginBottom: "0.5rem" }}>
+                <div>
+                  <SectionTitle>Mẫu Thiệp Mời</SectionTitle>
+                  <p style={{ margin: "0.25rem 0 0", fontSize: "0.86rem", color: "var(--muted, #94a3b8)" }}>
+                    Chọn phong cách hiển thị thiệp mời gửi đến khách. Nhấn vào mẫu để đổi giao diện tức thì hoặc xem thử thực tế.
+                  </p>
+                </div>
+                <GhostButton
+                  type="button"
+                  onClick={handlePreviewCard}
+                  style={{
+                    background: "rgba(11, 185, 194, 0.12)",
+                    color: "#0ab9c2",
+                    fontWeight: 700,
+                    border: "1px solid rgba(11, 185, 194, 0.3)"
+                  }}
+                >
+                  👁️ Xem trước thiệp thực tế
+                </GhostButton>
+              </SectionHeader>
+
+              <TemplateSelectorGrid>
+                {INVITATION_TEMPLATES.map((tmpl) => {
+                  const isCurrent = (event.template || "classic-gold") === tmpl.id;
+                  return (
+                    <TemplateChoiceCard
+                      key={tmpl.id}
+                      $selected={isCurrent}
+                      onClick={() => handleSelectTemplate(tmpl.id)}
+                      title={`Chọn ${tmpl.name}`}
+                    >
+                      <div className="top-row">
+                        <span className="icon">{tmpl.icon}</span>
+                        {isCurrent && <span className="check">✓</span>}
+                      </div>
+                      <div className="name">{tmpl.name}</div>
+                      <div className="badge">{tmpl.tagline}</div>
+                      <div style={{ fontSize: "0.72rem", opacity: 0.75, marginTop: "0.2rem" }}>
+                        {tmpl.suitableFor}
+                      </div>
+                    </TemplateChoiceCard>
+                  );
+                })}
+              </TemplateSelectorGrid>
+            </Panel> */}
 
             <Panel>
               <SectionHeader style={{ marginBottom: "0.75rem" }}>
@@ -1091,15 +1339,7 @@ export default function EventDetail() {
               </SectionHeader>
 
               {showAddGuest && (
-                <div
-                  style={{
-                    marginBottom: "1.5rem",
-                    padding: "1rem",
-                    background: "rgba(255, 255, 255, 0.03)",
-                    borderRadius: "16px",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                  }}
-                >
+                <AddGuestBox>
                   <SectionHeader style={{ marginBottom: "1rem" }}>
                     <div>
                       <SectionTitle>Thêm khách mới</SectionTitle>
@@ -1123,7 +1363,7 @@ export default function EventDetail() {
                     />
                     <PrimaryButton type="submit">Thêm</PrimaryButton>
                   </FormGrid>
-                </div>
+                </AddGuestBox>
               )}
 
               <GuestGrid>
@@ -1176,13 +1416,12 @@ export default function EventDetail() {
                               </StatusPill>
                             )}
                             <GhostButton type="button" onClick={() => handleEditGuest(g)}>Sửa</GhostButton>
-                            <GhostButton
+                            <DangerGhostButton
                               type="button"
                               onClick={() => handleDeleteGuest(g._id)}
-                              style={{ color: '#ffb0b0' }}
                             >
                               Xóa
-                            </GhostButton>
+                            </DangerGhostButton>
                           </ToolRow>
                         </GuestTools>
                       </>

@@ -6,6 +6,9 @@ const EventSchema = new Schema({
   date: { type: Date, required: true },
   location: { type: String },
   description: { type: String },
+  coverImage: { type: String },
+  category: { type: String },
+  template: { type: String, default: 'classic-gold' },
   createdBy: { type: String },
   schedule: [{
     time: { type: String, required: true },

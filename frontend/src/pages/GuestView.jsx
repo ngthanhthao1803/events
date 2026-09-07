@@ -1,39 +1,53 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import { io } from "socket.io-client";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { getSocketUrl } from "../utils/socketUrl";
+import {
+  INVITATION_TEMPLATES,
+  getTemplateById,
+  detectSuggestedTemplate,
+} from "../utils/invitationTemplates";
 
-const float1 = keyframes`
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0); }
+// Animations
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
 const pulseGlow = keyframes`
   0% { 
     transform: scale(1);
-    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.2));
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3));
   }
   50% { 
     transform: scale(1.03);
-    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.8));
+    filter: drop-shadow(0 0 16px rgba(212, 175, 55, 0.8));
   }
   100% { 
     transform: scale(1);
-    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.2));
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.3));
   }
 `;
 
+const livePulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+`;
+
+// Outer desktop wrapper
 const OuterWrapper = styled.div`
   min-height: 100svh;
   display: flex;
   justify-content: center;
-  background: radial-gradient(circle, #3b2c1c 0%, #120d07 100%);
+  align-items: center;
+  background: ${({ $theme }) => $theme.outerBg};
+  transition: background 0.4s ease;
 `;
 
+// Main Mobile-First Full-Screen Invitation Page
 const Page = styled.div`
   position: relative;
   width: 100%;
@@ -43,39 +57,65 @@ const Page = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 1rem;
+  padding: 1.25rem 1rem 3.5rem;
   overflow-x: hidden;
-  background-color: #f7e6c3;
-  background-image: url("/invitation_card/main_bg.png");
+  box-sizing: border-box;
+
+  /* Rich Graphic Background Image */
+  background-color: ${({ $theme }) => $theme.cardBg};
+  background-image: url("${({ $theme }) => $theme.bgImage}");
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
-  color: #725227;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+
+  color: ${({ $theme }) => $theme.primaryColor};
+  font-family: ${({ $theme }) => $theme.fontBody};
+  box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
+  transition: background 0.4s ease;
 `;
 
+// Top Logos Header (Original Tân Dân 30 Years)
 const Logos = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 370px;
-  margin-top: 0.5rem;
-  padding: 0 5px;
+  max-width: 420px;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  padding: 0 6px;
 
   img.logo1 {
-    height: 45px;
+    height: 44px;
+    object-fit: contain;
   }
   img.logo2 {
     height: 32px;
+    object-fit: contain;
   }
   img.logo3 {
     height: 40px;
+    object-fit: contain;
   }
 `;
 
-const slideUp = keyframes`
-  to { opacity: 1; transform: translateY(0); }
+// Top Luxury Badge for other themes
+const TopBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid ${({ $theme }) => $theme.borderColor};
+  color: ${({ $theme }) => $theme.accentColor};
 `;
 
 const ContentWrapper = styled.div`
@@ -87,422 +127,395 @@ const ContentWrapper = styled.div`
   align-items: center;
   text-align: center;
   opacity: 0;
-  animation: ${slideUp} 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  padding-bottom: 3rem;
+  animation: ${slideUp} 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding-bottom: 2rem;
 `;
 
+// Card Main Title: "Thư Mời"
 const ThuMoi = styled.div`
-  font-family: "Times New Roman", serif;
-  font-size: 4rem;
-  font-weight: 700;
-  color: #fffaea;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: 2rem;
-  margin-bottom: 1.5rem;
-  -webkit-text-stroke: 1px #a87932;
-  text-shadow:
-    -1px 1px 0 #8f611f,
-    -2px 2px 0 #7d5115,
-    -3px 3px 0 #66400c,
-    -4px 4px 0 #523105,
-    -5px 5px 10px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.06em;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.1;
+
+  ${({ $theme }) =>
+    $theme.id === "classic-gold"
+      ? css`
+          font-family: "Times New Roman", serif;
+          font-size: 3.8rem;
+          font-weight: 700;
+          color: #fffaea;
+          -webkit-text-stroke: 1px #a87932;
+          text-shadow:
+            -1px 1px 0 #8f611f,
+            -2px 2px 0 #7d5115,
+            -3px 3px 0 #66400c,
+            -4px 4px 0 #523105,
+            -5px 5px 10px rgba(0, 0, 0, 0.5);
+        `
+      : $theme.id === "luxury-gala"
+        ? css`
+          font-family: "Playfair Display", Georgia, serif;
+          font-size: 3.4rem;
+          font-weight: 800;
+          color: #fffbeb;
+          letter-spacing: 0.08em;
+          text-shadow: 0 3px 18px rgba(212, 175, 55, 0.6);
+        `
+        : $theme.id === "crimson-opening"
+          ? css`
+          font-family: "Playfair Display", Georgia, serif;
+          font-size: 3.4rem;
+          font-weight: 800;
+          color: #fef08a;
+          letter-spacing: 0.06em;
+          text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+        `
+          : $theme.id === "modern-sports"
+            ? css`
+          font-family: "Montserrat", sans-serif;
+          font-size: 3rem;
+          font-weight: 900;
+          color: #ffffff;
+          letter-spacing: 0.05em;
+          text-shadow: 0 3px 14px rgba(0, 0, 0, 0.8);
+        `
+            : css`
+          font-family: "Playfair Display", Georgia, serif;
+          font-size: 2.8rem;
+          font-weight: 700;
+          color: #1e293b;
+          letter-spacing: 0.12em;
+        `}
 `;
 
+// Subtitle: "Trân trọng kính mời"
 const Subtitle = styled.div`
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #7e4016;
+  font-size: 1.05rem;
+  font-weight: 500;
   text-transform: uppercase;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+  color: ${({ $theme }) => $theme.subColor};
 `;
 
+// Guest Name: Tên khách mời
 const GuestName = styled.h3`
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: ##5b3902;
   margin: 0 0 0.5rem 0;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${({ $theme }) => $theme.primaryColor};
+  font-family: ${({ $theme }) => $theme.fontHeading};
 `;
 
-const EventInfo = styled.div`
-  color: #725227;
-  font-size: 0.95rem;
-  margin: 0.5rem 0;
-  font-weight: 700;
-  text-transform: uppercase;
-  line-height: 1.5;
+// Divider Line
+const Divider = styled.div`
+  width: 100%;
+  max-width: 380px;
+  margin: 0.25rem auto 0.75rem;
 
-  .title {
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: #fff;
-    -webkit-text-stroke: 1px #c59346;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-    margin-bottom: 0.2rem;
-    letter-spacing: 0.05em;
+  img {
+    width: 100%;
+    max-width: 380px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .ornamental-line {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      ${({ $theme }) => $theme.borderColor} 50%,
+      transparent 100%
+    );
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.75rem 0;
+
+    &::after {
+      content: "✦";
+      position: absolute;
+      padding: 0 6px;
+      font-size: 0.75rem;
+      color: ${({ $theme }) => $theme.accentColor};
+    }
   }
 `;
 
-const BallImage = styled.img`
-  width: 100%;
-  max-width: 250px;
-  object-fit: contain;
-  margin: 0;
-  animation: ${pulseGlow} 3s ease-in-out infinite;
-  transform-origin: bottom center;
+// Event Info Block
+const EventInfo = styled.div`
+  margin: 0.5rem 0;
+  text-transform: uppercase;
+  line-height: 1.45;
+
+  .pretext {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: ${({ $theme }) => $theme.subColor};
+    margin-bottom: 0.25rem;
+  }
+
+  .title {
+    font-size: 1.7rem;
+    font-weight: 900;
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    color: ${({ $theme }) => $theme.titleColor};
+    font-family: ${({ $theme }) => $theme.fontHeading};
+
+    ${({ $theme }) =>
+    $theme.id === "classic-gold" &&
+    css`
+        color: #fff;
+        -webkit-text-stroke: 1px #c59346;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+      `}
+  }
+
+  .desc {
+    font-size: 0.84rem;
+    max-width: 350px;
+    margin: 0 auto;
+    font-weight: 700;
+    line-height: 1.45;
+    color: ${({ $theme }) => $theme.subColor};
+  }
 `;
 
-const ConfirmBtn = styled.div`
-  width: 260px;
-  height: 55px;
-  background-image: url("/invitation_card/button.png");
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: transform 0.2s;
+// Event Time & Date Box (Original Tan Dan Structure)
+const EventTimeLoc = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4e250d;
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  gap: 1.25rem;
+  margin: 0.8rem 0 0.3rem 0;
 
-  &:active {
-    transform: scale(0.95);
+  .time {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1;
+    color: ${({ $theme }) =>
+    $theme.id === "classic-gold" ? "#8a4b08" : $theme.primaryColor};
+    font-family: ${({ $theme }) => $theme.fontHeading};
+  }
+
+  .divider {
+    width: 2px;
+    height: 38px;
+    background: ${({ $theme }) => $theme.accentColor};
+    opacity: 0.8;
+  }
+
+  .date {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.15;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: ${({ $theme }) =>
+    $theme.id === "classic-gold" ? "#8a4b08" : $theme.primaryColor};
+    font-family: ${({ $theme }) => $theme.fontHeading};
   }
 `;
 
+// Venue Location Bar
+const LocationText = styled.div`
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.35rem;
+  margin-bottom: 0.75rem;
+  color: ${({ $theme }) => $theme.primaryColor};
+  max-width: 380px;
+  line-height: 1.4;
+`;
+
+// Center Artwork Graphic (Ball / Trophy / Ribbon / Monogram)
+const CenterGraphic = styled.img`
+  width: 100%;
+  max-width: 250px;
+  max-height: 250px;
+  object-fit: contain;
+  margin: 0.4rem 0;
+  animation: ${pulseGlow} 3.2s ease-in-out infinite;
+  transform-origin: bottom center;
+
+  ${({ $isRounded }) =>
+    $isRounded &&
+    css`
+      border-radius: 50%;
+      border: 3px solid rgba(212, 175, 55, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    `}
+`;
+
+// Confirmation Button (Matches original button.png or custom styled)
+const ConfirmBtn = styled.button`
+  width: 260px;
+  height: 54px;
+  border: none;
+  cursor: pointer;
+  margin-top: 0.85rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  ${({ $theme }) =>
+    $theme.buttonImage
+      ? css`
+          background-image: url("${$theme.buttonImage}");
+          background-size: 100% 100%;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-color: transparent;
+          color: #4e250d;
+        `
+      : css`
+          background: linear-gradient(135deg, ${$theme.accentColor} 0%, #b45309 100%);
+          color: #0c0a09;
+          border-radius: 999px;
+          border: 1.5px solid #fef08a;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        `}
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`;
+
+// QR Code Container
 const QRContainer = styled.div`
   margin: 1.5rem 0 1rem;
-  padding: 1px;
-  background: #fff;
-  border: 5px solid #c59346;
+  padding: 4px;
+  background: #ffffff;
+  border: 4px solid ${({ $theme }) => $theme.accentColor};
+  border-radius: 12px;
   display: inline-block;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
   img {
-    width: 140px;
-    height: 140px;
+    width: 150px;
+    height: 150px;
     display: block;
   }
 `;
 
 const InstructionText = styled.p`
-  color: #8f5e01;
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0.5rem 0 1rem 0;
-  max-width: 280px;
-  line-height: 1.4;
+  font-size: 0.86rem;
+  max-width: 340px;
+  margin: 0.2rem auto 0.75rem;
+  font-weight: 600;
+  color: ${({ $theme }) => $theme.subColor};
+  line-height: 1.45;
 `;
 
+// Lucky Number Box
 const LuckyNumber = styled.div`
-  margin: 0.5rem 0;
+  font-size: 0.92rem;
   font-weight: 700;
-  font-size: 1rem;
-  text-transform: uppercase;
-
-  background: linear-gradient(to top, #8a4b08 30%, #c87d0e 100%, #efa836 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: ${({ $theme }) => $theme.subColor};
+  margin: 0.6rem 0;
 
   .num {
-    font-size: 3rem;
-    font-weight: 900;
-    line-height: 1.1;
-    background: linear-gradient(
-      to bottom,
-      #8a4b08 30%,
-      #c87d0e 80%,
-      #efa836 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-`;
-
-const EventTimeLoc = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin: 1rem 0 0.2rem 0;
-
-  background: linear-gradient(
-    to bottom,
-    #8a4b08 30%,
-    #c87d0e 80%,
-    #efa836 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-
-  .time {
     font-size: 2.8rem;
-    font-weight: 400;
-    font-family: "Times New Roman", serif;
-  }
-
-  .divider {
-    width: 1px;
-    height: 40px;
-    background: linear-gradient(
-      to bottom,
-      #8a4b08 30%,
-      #c87d0e 80%,
-      #efa836 100%
-    );
-  }
-
-  .date {
-    font-size: 1.2rem;
-    font-weight: 800;
-    text-align: left;
-    line-height: 1.1;
-    display: flex;
-    flex-direction: column;
-
-    span {
-      background: linear-gradient(
-        to bottom,
-        #8a4b08 30%,
-        #c87d0e 80%,
-        #efa836 100%
-      );
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-`;
-
-const LocationText = styled.p`
-  font-size: 0.6rem;
-  font-weight: 700;
-  margin: 0 0 1rem 0;
-
-  background: linear-gradient(
-    to bottom,
-    #8a4b08 30%,
-    #c87d0e 80%,
-    #efa836 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-`;
-
-const CountdownContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #fff;
-  margin-top: 1rem;
-
-  .title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-    color: #fff;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-  }
-
-  .subtitle {
-    font-size: 1.1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-top: 1rem;
-
-    background: linear-gradient(to top, #d29837 0%, #f1d487 10%, #fff3b3 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-`;
-
-const TimeBox = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-
-  .value {
-    font-size: 3rem;
-    font-weight: 800;
-    color: #fff;
-    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+    font-weight: 900;
+    color: ${({ $theme }) => $theme.accentColor};
+    font-family: ${({ $theme }) => $theme.fontHeading};
+    letter-spacing: 0.08em;
     line-height: 1;
-  }
-  .label {
-    font-size: 1.2rem;
-    font-weight: 400;
-    text-transform: capitalize;
-    color: #fff;
-    margin-right: 0.8rem;
+    margin-top: 0.2rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
   }
 `;
 
-const dotGlow = keyframes`
-  0% { box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.4); }
-  50% { box-shadow: 0 0 15px 5px rgba(255, 255, 255, 1); }
-  100% { box-shadow: 0 0 5px 2px rgba(255, 255, 255, 0.4); }
-`;
-
-const rotateGlow = keyframes`
-  0% { transform: translate(-50%, -50%) rotate(0deg) translateZ(0); }
-  100% { transform: translate(-50%, -50%) rotate(360deg) translateZ(0); }
-`;
-
-const arrowDownMotion = keyframes`
-  0%, 100% { transform: translateY(0) rotate(45deg); }
-  50% { transform: translateY(5px) rotate(45deg); }
-`;
-
-const arrowUpMotion = keyframes`
-  0%, 100% { transform: translateY(0) rotate(-135deg); }
-  50% { transform: translateY(-5px) rotate(-135deg); }
-`;
-
+// Realtime Event Schedule Drawer
 const ScheduleList = styled.div`
   width: 100%;
-  margin-top: 1.5rem;
+  max-width: 380px;
+  margin-top: 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid ${({ $theme }) => $theme.borderColor};
+  border-radius: 16px;
+  padding: 0.85rem;
+  box-sizing: border-box;
   text-align: left;
-  padding: 0 10px;
 
   .header {
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-weight: 800;
-    color: #fff;
     text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: ${({ $theme }) => $theme.accentColor};
     text-align: center;
-    margin-bottom: 1rem;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    margin-bottom: 0.5rem;
   }
 
   .toggle-button {
-    display: block;
-    width: 42px;
-    height: 32px;
-    margin: 0 auto 0.8rem;
-    padding: 0;
-    border: 0;
     background: transparent;
-    color: #fff;
+    border: none;
     cursor: pointer;
-    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.45));
-
-    &:hover .arrow {
-      border-color: #fff9dc;
-    }
-    &:active {
-      transform: scale(0.9);
-    }
-
-    .arrow {
-      display: block;
-      width: 14px;
-      height: 14px;
-      margin: 0 auto;
-      border-right: 3px solid currentColor;
-      border-bottom: 3px solid currentColor;
-      transition: border-color 0.2s;
-    }
-
-    .arrow-down {
-      animation: ${arrowDownMotion} 1.4s ease-in-out infinite;
-    }
-
-    .arrow-up {
-      animation: ${arrowUpMotion} 1.4s ease-in-out infinite;
-    }
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 4px;
+    color: ${({ $theme }) => $theme.accentColor};
+    font-size: 0.8rem;
+    font-weight: bold;
   }
 
   .schedule-items {
     max-height: 1000px;
     opacity: 1;
     overflow: hidden;
-    transform: translateY(0);
-    transition:
-      max-height 0.6s ease,
-      opacity 0.35s ease,
-      transform 0.6s ease;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    margin-top: 0.4rem;
 
     &.closed {
       max-height: 0;
       opacity: 0;
+      margin-top: 0;
       pointer-events: none;
-      transform: translateY(-12px);
     }
   }
 
   .item {
     display: flex;
     align-items: center;
-    margin-bottom: 0.6rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #8c5a1a;
-    position: relative;
-    padding-left: 1.5rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.86rem;
+    color: ${({ $theme }) => $theme.primaryColor};
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 6px 10px;
 
     &.active {
-      color: #fff;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      border: 1px solid ${({ $theme }) => $theme.accentColor};
+      background: rgba(255, 255, 255, 0.15);
+      font-weight: 800;
 
-      &::before {
-        content: "";
-        position: absolute;
-        left: 5px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 14px;
-        height: 14px;
-        background: #fff;
-        border-radius: 50%;
-        animation: ${dotGlow} 1.5s infinite;
-        z-index: 2;
-      }
-
-      .content-box {
-        position: relative;
-        overflow: hidden;
-        z-index: 1;
-        box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
-        border: none;
-
-        &::before {
-          content: "";
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 500px;
-          height: 500px;
-          background: conic-gradient(
-            from 0deg,
-            transparent 0%,
-            transparent 70%,
-            rgba(255, 255, 255, 0.6) 90%,
-            #fff 100%
-          );
-          animation: ${rotateGlow} 2.5s linear infinite;
-          z-index: -2;
-          will-change: transform;
-        }
-
-        &::after {
-          content: "";
-          position: absolute;
-          inset: 2px;
-          background: rgba(184, 126, 42, 0.95);
-          border-radius: 4px;
-          z-index: -1;
-        }
+      .time {
+        color: ${({ $theme }) => $theme.accentColor};
       }
     }
 
@@ -510,91 +523,169 @@ const ScheduleList = styled.div`
       display: flex;
       align-items: center;
       width: 100%;
-      padding: 8px 12px;
-      border: 1px solid transparent;
-      border-radius: 6px;
     }
 
     .time {
-      margin-right: 8px;
       font-weight: 800;
+      margin-right: 8px;
       flex-shrink: 0;
     }
 
     .label {
-      font-weight: 400;
+      flex: 1;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: ${livePulse} 1.4s infinite;
+      margin-left: 6px;
     }
   }
 `;
 
-const SCHEDULE_DATA = [
-  { time: "07:00", label: "Tập trung", isActive: true },
-  { time: "07:30", label: "Khai mạc" },
-  { time: "07:45", label: "Trận đấu 1" },
-  { time: "08:30", label: "Trận đấu 2" },
-  { time: "09:00", label: "Trận đấu 3" },
-  { time: "09:30", label: "Trận đấu 4" },
-  { time: "10:00", label: "Trận bán kết 1" },
-  { time: "10:30", label: "Trận bán kết 2" },
-  { time: "11:00", label: "Trận tranh giải ba" },
-  { time: "12:00", label: "Trận chung kết tổng" },
-  { time: "12:30", label: "Lễ trao giải" },
-  { time: "13:30", label: "Tiệc thân mật" },
-  { time: "15:30", label: "Kết thúc chương trình" },
+// Countdown Section
+const CountdownShell = styled.div`
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.8rem 0;
+
+  .count-box {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid ${({ $theme }) => $theme.borderColor};
+    border-radius: 10px;
+    padding: 0.55rem 0.75rem;
+    min-width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .num {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: ${({ $theme }) => $theme.accentColor};
+      font-family: ${({ $theme }) => $theme.fontHeading};
+      line-height: 1;
+    }
+    .lbl {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: ${({ $theme }) => $theme.subColor};
+      margin-top: 0.2rem;
+    }
+  }
+`;
+
+// Floating Template Switcher (For Organizers in Preview Mode)
+const FloatingSwitcher = styled.div`
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 96vw;
+  overflow-x: auto;
+
+  .switcher-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    padding-left: 0.4rem;
+    white-space: nowrap;
+  }
+`;
+
+const SwitcherPill = styled.button`
+  border: none;
+  background: ${({ $active }) =>
+    $active ? "linear-gradient(135deg, #0ab9c2, #2ec4ff)" : "rgba(255, 255, 255, 0.08)"};
+  color: ${({ $active }) => ($active ? "#041216" : "#f8fafc")};
+  font-weight: 700;
+  font-size: 0.76rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${({ $active }) =>
+    $active ? "linear-gradient(135deg, #0ab9c2, #2ec4ff)" : "rgba(255, 255, 255, 0.18)"};
+  }
+`;
+
+const SaveTemplateBtn = styled.button`
+  border: none;
+  background: #16a34a;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.76rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: #15803d;
+  }
+`;
+
+const DEFAULT_SCHEDULE = [
+  { time: "07:00", label: "Tập trung đón khách", isActive: true },
+  { time: "07:30", label: "Khai mạc chương trình", isActive: false },
+  { time: "08:00", label: "Tiết mục mở màn & Diễn văn", isActive: false },
+  { time: "09:00", label: "Nội dung chính sự kiện", isActive: false },
+  { time: "11:30", label: "Khen thưởng & Trao giải", isActive: false },
+  { time: "12:00", label: "Dạ tiệc giao lưu", isActive: false },
+  { time: "14:00", label: "Bế mạc & Chụp hình lưu niệm", isActive: false },
 ];
 
-function Countdown({ targetDate }) {
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+function CountdownView({ targetDate, theme }) {
+  const [timeLeft, setTimeLeft] = useState(calc());
 
-  function calculateTimeLeft() {
-    const difference = +new Date(targetDate) - +new Date();
-    let timeLeft = {};
-    if (difference > 0) {
-      timeLeft = {
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-      };
-    }
-    return timeLeft;
+  function calc() {
+    const diff = +new Date(targetDate) - +new Date();
+    if (diff <= 0) return { days: 0, hours: 0, minutes: 0 };
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((diff / 1000 / 60) % 60),
+    };
   }
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000 * 60);
-    return () => clearTimeout(timer);
-  });
-
-  if (Object.keys(timeLeft).length === 0) {
-    return (
-      <p style={{ color: "#fff", fontWeight: 700, marginTop: "1rem" }}>
-        Sự kiện đang diễn ra!
-      </p>
-    );
-  }
+    const t = setInterval(() => setTimeLeft(calc()), 30000);
+    return () => clearInterval(t);
+  }, [targetDate]);
 
   return (
-    <CountdownContainer>
-      <div className="title">CHỈ CÒN</div>
-      <TimeBox
-        style={{ justifyContent: "center", width: "100%", marginBottom: "5px" }}
-      >
-        <span className="value">{timeLeft.days || 0}</span>
-        <span className="label">Ngày</span>
-      </TimeBox>
-      <TimeBox style={{ justifyContent: "center", width: "100%" }}>
-        <span className="value">
-          {timeLeft.hours?.toString().padStart(2, "0") || "00"}
-        </span>
-        <span className="label">Giờ</span>
-        <span className="value">
-          {timeLeft.minutes?.toString().padStart(2, "0") || "00"}
-        </span>
-        <span className="label">Phút</span>
-      </TimeBox>
-      <div className="subtitle">SỰ KIỆN SẼ DIỄN RA</div>
-    </CountdownContainer>
+    <CountdownShell $theme={theme}>
+      <div className="count-box">
+        <span className="num">{timeLeft.days}</span>
+        <span className="lbl">Ngày</span>
+      </div>
+      <div className="count-box">
+        <span className="num">{timeLeft.hours}</span>
+        <span className="lbl">Giờ</span>
+      </div>
+      <div className="count-box">
+        <span className="num">{timeLeft.minutes}</span>
+        <span className="lbl">Phút</span>
+      </div>
+    </CountdownShell>
   );
 }
 
@@ -607,6 +698,9 @@ export default function GuestView({ isPreview = false }) {
     return localStorage.getItem(`confirmed_${guestId}`) === "true";
   });
 
+  const [activeTemplateId, setActiveTemplateId] = useState(null);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
   useEffect(() => {
     let socketInstance = null;
     let isMounted = true;
@@ -616,33 +710,37 @@ export default function GuestView({ isPreview = false }) {
         try {
           const res = await axios.get(`/api/events/${eventId}`);
           if (!isMounted) return;
+          const ev = res.data;
           setGuest({
-            _id: "02",
-            name: "Hữu Toàn",
-            eventId: res.data,
+            _id: "preview-id",
+            name: "Nguyễn Văn Khách",
+            guestIndex: "08",
+            eventId: ev,
             qrDataUrl:
-              "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=preview&color=8c5a1a&bgcolor=ffffff",
+              "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=preview-pass&color=0f172a&bgcolor=ffffff",
           });
+
+          setActiveTemplateId(ev.template || detectSuggestedTemplate(ev.title, ev.description));
 
           if (eventId) {
             socketInstance = io(getSocketUrl());
             socketInstance.emit("joinEvent", eventId.toString());
-
             socketInstance.on("eventUpdated", (updatedEvent) => {
               if (updatedEvent?._id?.toString() === eventId?.toString()) {
                 setGuest((prev) =>
                   prev
                     ? {
-                        ...prev,
-                        eventId: {
-                          ...(typeof prev.eventId === "object"
-                            ? prev.eventId
-                            : {}),
-                          ...updatedEvent,
-                        },
-                      }
-                    : prev,
+                      ...prev,
+                      eventId: {
+                        ...(typeof prev.eventId === "object" ? prev.eventId : {}),
+                        ...updatedEvent,
+                      },
+                    }
+                    : prev
                 );
+                if (updatedEvent.template) {
+                  setActiveTemplateId(updatedEvent.template);
+                }
               }
             });
           }
@@ -660,29 +758,34 @@ export default function GuestView({ isPreview = false }) {
           setGuest(guestData);
           setChecked(Boolean(guestData.checkedIn));
 
-          if (guestData.eventId) {
-            const rawEventId = guestData.eventId._id || guestData.eventId;
-            const roomToJoin = rawEventId.toString();
+          const ev = guestData.eventId;
+          if (ev) {
+            const templateChoice =
+              typeof ev === "object"
+                ? ev.template || detectSuggestedTemplate(ev.title, ev.description)
+                : "classic-gold";
+            setActiveTemplateId(templateChoice);
 
+            const rawEventId = ev._id || ev;
             socketInstance = io(getSocketUrl());
-
-            socketInstance.emit("joinEvent", roomToJoin);
+            socketInstance.emit("joinEvent", rawEventId.toString());
 
             socketInstance.on("eventUpdated", (updatedEvent) => {
               if (!updatedEvent) return;
               setGuest((prev) =>
                 prev
                   ? {
-                      ...prev,
-                      eventId: {
-                        ...(typeof prev.eventId === "object"
-                          ? prev.eventId
-                          : {}),
-                        ...updatedEvent,
-                      },
-                    }
-                  : prev,
+                    ...prev,
+                    eventId: {
+                      ...(typeof prev.eventId === "object" ? prev.eventId : {}),
+                      ...updatedEvent,
+                    },
+                  }
+                  : prev
               );
+              if (updatedEvent.template) {
+                setActiveTemplateId(updatedEvent.template);
+              }
             });
 
             socketInstance.on("guestCheckedIn", (payload) => {
@@ -692,11 +795,9 @@ export default function GuestView({ isPreview = false }) {
               const currentShortCode = guestData.shortCode;
 
               const isMatch =
-                (incomingId &&
-                  (incomingId === currentDbId || incomingId === guestId)) ||
+                (incomingId && (incomingId === currentDbId || incomingId === guestId)) ||
                 (incomingShortCode &&
-                  (incomingShortCode === currentShortCode ||
-                    incomingShortCode === guestId));
+                  (incomingShortCode === currentShortCode || incomingShortCode === guestId));
 
               if (isMatch) {
                 setChecked(true);
@@ -704,8 +805,7 @@ export default function GuestView({ isPreview = false }) {
                 setGuest((prev) => {
                   if (!prev) return prev;
                   const currentEvent =
-                    payload?.guest?.eventId &&
-                    typeof payload.guest.eventId === "object"
+                    payload?.guest?.eventId && typeof payload.guest.eventId === "object"
                       ? payload.guest.eventId
                       : prev.eventId;
 
@@ -719,12 +819,7 @@ export default function GuestView({ isPreview = false }) {
                 if (guestId) {
                   localStorage.setItem(`confirmed_${guestId}`, "true");
                 }
-                toast.success("Bạn đã được check‑in thành công!", {
-                  style: {
-                    background: "#c59346",
-                    color: "#fff",
-                  },
-                });
+                toast.success("Bạn đã được check-in thành công!", { icon: "🎉" });
               }
             });
           }
@@ -734,6 +829,7 @@ export default function GuestView({ isPreview = false }) {
       };
       fetchGuest();
     }
+
     return () => {
       isMounted = false;
       if (socketInstance) socketInstance.disconnect();
@@ -742,201 +838,196 @@ export default function GuestView({ isPreview = false }) {
 
   const handleConfirm = () => {
     setIsConfirmed(true);
-    localStorage.setItem(`confirmed_${guestId}`, "true");
+    if (guestId) {
+      localStorage.setItem(`confirmed_${guestId}`, "true");
+    }
     toast.success("Xác nhận tham dự thành công!");
+  };
+
+  const handleSaveTemplateForEvent = async () => {
+    const targetEventId = eventId || guest?.eventId?._id;
+    if (!targetEventId) return;
+
+    setIsSavingTemplate(true);
+    try {
+      await axios.put(`/api/events/${targetEventId}`, {
+        template: activeTemplateId,
+      });
+      toast.success(`Đã lưu mẫu "${currentTheme.name}" cho sự kiện!`, {
+        icon: "💾",
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Lỗi khi lưu mẫu thiệp: " + err.message);
+    } finally {
+      setIsSavingTemplate(false);
+    }
   };
 
   if (!guest) {
     return (
-      <OuterWrapper>
-        <Page>
-          <ContentWrapper
-            style={{
-              width: "auto",
-              justifyContent: "center",
-              height: "100svh",
-            }}
-          >
-            <p style={{ color: "#c59346", margin: 0, fontWeight: "bold" }}>
-              Đang tải thiệp mời…
-            </p>
-          </ContentWrapper>
-        </Page>
+      <OuterWrapper $theme={getTemplateById("classic-gold")}>
+        <div style={{ color: "#c59346", fontWeight: "bold" }}>Đang tải thiệp mời…</div>
       </OuterWrapper>
     );
   }
 
-  // Derive simple Date strings
-  const eventDateObj = guest.eventId?.date
-    ? new Date(guest.eventId.date)
-    : new Date("2026-08-28T07:00:00");
-  const timeString = eventDateObj.toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const currentTheme = getTemplateById(activeTemplateId || "classic-gold");
+
+  const eventDateObj = guest.eventId?.date ? new Date(guest.eventId.date) : new Date();
+  const timeString = !isNaN(eventDateObj.getTime())
+    ? eventDateObj.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    : "08:00";
   const dd = String(eventDateObj.getDate()).padStart(2, "0");
   const mm = String(eventDateObj.getMonth() + 1).padStart(2, "0");
   const yyyy = eventDateObj.getFullYear();
-  // Get index or ID for lucky number
+
   const luckyNumber = (
     guest.guestIndex ||
     guest._id?.substring(guest._id.length - 2) ||
-    "02"
+    "08"
   ).toUpperCase();
 
+  const eventTitle = guest.eventId?.title || "SỰ KIỆN ĐẶC BIỆT";
+  const eventDesc =
+    guest.eventId?.description ||
+    "Hân hạnh kính mời Quý khách đến tham dự và chung vui cùng chúng tôi.";
+  const eventLocation = guest.eventId?.location || "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long";
+
+  // Check if center emblem is a photo that should be circle-framed
+  const isCircleEmblem =
+    currentTheme.id !== "classic-gold" && currentTheme.emblemImage;
+
   return (
-    <OuterWrapper>
-      <Page>
-        <Logos>
-          <img
-            src="/invitation_card/logo_1.png"
-            alt="Logo 1"
-            className="logo1"
-          />
-          <img
-            src="/invitation_card/logo_2.png"
-            alt="Logo 2"
-            className="logo2"
-          />
-          <img
-            src="/invitation_card/logo_3.png"
-            alt="Logo 3"
-            className="logo3"
-          />
-        </Logos>
+    <OuterWrapper $theme={currentTheme}>
+      <Page $theme={currentTheme}>
+        {/* Top Header / Logos */}
+        {currentTheme.hasTopLogos ? (
+          <Logos>
+            <img src="/invitation_card/logo_1.png" alt="Logo 1" className="logo1" />
+            <img src="/invitation_card/logo_2.png" alt="Logo 2" className="logo2" />
+            <img src="/invitation_card/logo_3.png" alt="Logo 3" className="logo3" />
+          </Logos>
+        ) : (
+          <TopBadge $theme={currentTheme}>
+            {/* <span>{currentTheme.icon}</span> */}
+            <span>{currentTheme.badge}</span>
+          </TopBadge>
+        )}
 
         <ContentWrapper>
-          {/* State 1: Not Confirmed and Not Checked-In */}
+          {/* STATE 1: Chưa xác nhận tham dự */}
           {!isConfirmed && !checked && (
             <>
-              <ThuMoi>Thư Mời</ThuMoi>
-              <Subtitle>Trân trọng kính mời</Subtitle>
-              <GuestName>{guest.name}</GuestName>
-              <img
-                src="/invitation_card/divider.png"
-                alt="Divider"
-                style={{
-                  width: "100%",
-                  maxWidth: "380px",
-                  objectFit: "contain",
-                }}
-              />
+              <ThuMoi $theme={currentTheme}>Thư Mời</ThuMoi>
+              <Subtitle $theme={currentTheme}>Trân trọng kính mời</Subtitle>
+              <GuestName $theme={currentTheme}>{guest.name}</GuestName>
 
-              <EventInfo>
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    fontWeight: "400",
-                    color: "#7e4016",
-                  }}
-                >
-                  Đến tham dự
-                </div>
-                <div className="title">
-                  {guest.eventId?.title || "GIẢI PICKLEBALL"}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.8rem",
-                    maxWidth: "350px",
-                    margin: "0 auto",
-                    fontWeight: "900",
-                    color: "#7e4016",
-                  }}
-                >
-                  {guest.eventId?.description ||
-                    "CHÀO MỪNG KỶ NIỆM 30 NĂM THÀNH LẬP CÔNG TY TNHH TM DV SX TÂN DÂN (1996 - 2026)"}
-                </div>
+              <Divider $theme={currentTheme}>
+                {currentTheme.dividerImage ? (
+                  <img src={currentTheme.dividerImage} alt="Divider" />
+                ) : (
+                  <div className="ornamental-line" />
+                )}
+              </Divider>
+
+              <EventInfo $theme={currentTheme}>
+                <div className="pretext">Đến tham dự</div>
+                <div className="title">{eventTitle}</div>
+                <div className="desc">{eventDesc}</div>
               </EventInfo>
 
-              <EventTimeLoc style={{ marginTop: "1vh" }}>
+              <EventTimeLoc $theme={currentTheme}>
                 <div className="time">{timeString}</div>
-                <div className="divider"></div>
+                <div className="divider" />
                 <div className="date">
-                  <span>
-                    {dd}.{mm}
-                  </span>
+                  <span>{dd}.{mm}</span>
                   <span>{yyyy}</span>
                 </div>
               </EventTimeLoc>
-              <LocationText>
-                TẠI:{" "}
-                {guest.eventId?.location ||
-                  "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}
+
+              <LocationText $theme={currentTheme}>
+                📍 TẠI: {eventLocation}
               </LocationText>
 
-              <BallImage
-                src="/invitation_card/ball.png"
-                alt="Pickleball"
-                style={{ marginTop: "0vh", maxWidth: "270px" }}
-              />
+              {/* Artwork Center Graphic */}
+              {currentTheme.emblemImage && (
+                <CenterGraphic
+                  src={currentTheme.emblemImage}
+                  alt="Key Visual"
+                  $isRounded={isCircleEmblem}
+                />
+              )}
 
-              <ConfirmBtn onClick={handleConfirm} style={{ marginTop: "0vh" }}>
+              <ConfirmBtn $theme={currentTheme} onClick={handleConfirm}>
                 Xác nhận tham dự
               </ConfirmBtn>
             </>
           )}
 
-          {/* State 2: Confirmed but Not Checked-In */}
+          {/* STATE 2: Đã xác nhận & Chờ check-in */}
           {isConfirmed && !checked && (
             <>
               {guest.qrDataUrl && (
-                <QRContainer style={{ marginTop: "10vh" }}>
-                  <img src={guest.qrDataUrl} alt="QR Code" />
+                <QRContainer $theme={currentTheme}>
+                  <img src={guest.qrDataUrl} alt="QR Code Check-in" />
                 </QRContainer>
               )}
 
-              <InstructionText style={{ marginBottom: "2vh" }}>
-                Quý khách vui lòng trình mã QR để check in tại sự kiện và nhận
-                được con số may mắn
+              <InstructionText $theme={currentTheme}>
+                Quý khách vui lòng trình mã QR để check in tại sự kiện và nhận được con số may mắn
               </InstructionText>
 
-              <BallImage
-                src="/invitation_card/ball.png"
-                alt="Pickleball"
-                style={{ maxWidth: "270px", marginTop: "4vh" }}
-              />
+              {currentTheme.emblemImage && (
+                <CenterGraphic
+                  src={currentTheme.emblemImage}
+                  alt="Key Visual"
+                  $isRounded={isCircleEmblem}
+                />
+              )}
 
-              <EventTimeLoc style={{ marginTop: "3vh" }}>
+              <EventTimeLoc $theme={currentTheme}>
                 <div className="time">{timeString}</div>
-                <div className="divider"></div>
+                <div className="divider" />
                 <div className="date">
-                  <span>
-                    {dd}.{mm}
-                  </span>
+                  <span>{dd}.{mm}</span>
                   <span>{yyyy}</span>
                 </div>
               </EventTimeLoc>
-              <LocationText>
-                TẠI:{" "}
-                {guest.eventId?.location ||
-                  "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}
+
+              <LocationText $theme={currentTheme}>
+                📍 TẠI: {eventLocation}
               </LocationText>
 
               {guest.eventId?.date && (
-                <Countdown targetDate={guest.eventId.date} />
+                <CountdownView targetDate={guest.eventId.date} theme={currentTheme} />
               )}
             </>
           )}
 
-          {/* State 3: Checked-In */}
+          {/* STATE 3: Đã Check-in thành công */}
           {checked && (
             <>
-              <ThuMoi>Thư Mời</ThuMoi>
-              <Subtitle>Trân trọng kính mời</Subtitle>
-              <GuestName>{guest.name}</GuestName>
-              <img
-                src="/invitation_card/divider.png"
-                alt="Divider"
-                style={{
-                  width: "100%",
-                  maxWidth: "380px",
-                  objectFit: "contain",
-                }}
-              />
+              <ThuMoi $theme={currentTheme}>Thư Mời</ThuMoi>
+              <Subtitle $theme={currentTheme}>Trân trọng kính mời</Subtitle>
+              <GuestName $theme={currentTheme}>{guest.name}</GuestName>
+
+              <Divider $theme={currentTheme}>
+                {currentTheme.dividerImage ? (
+                  <img src={currentTheme.dividerImage} alt="Divider" />
+                ) : (
+                  <div className="ornamental-line" />
+                )}
+              </Divider>
 
               {guest.qrDataUrl && (
-                <QRContainer style={{ margin: "0.5rem 0", padding: "1px" }}>
+                <QRContainer
+                  $theme={currentTheme}
+                  style={{ margin: "0.4rem 0", padding: "2px" }}
+                >
                   <img
                     src={guest.qrDataUrl}
                     alt="QR Code"
@@ -945,85 +1036,93 @@ export default function GuestView({ isPreview = false }) {
                 </QRContainer>
               )}
 
-              <LuckyNumber>
+              <LuckyNumber $theme={currentTheme}>
                 Mã số của bạn là:
-                <br />
-                <div className="num">{luckyNumber}</div>
+                <div className="num">#{luckyNumber}</div>
               </LuckyNumber>
 
-              <BallImage
-                src="/invitation_card/ball.png"
-                alt="Pickleball"
-                style={{ maxWidth: "270px", margin: "1vh 0 0 0" }}
-              />
+              {currentTheme.emblemImage && (
+                <CenterGraphic
+                  src={currentTheme.emblemImage}
+                  alt="Key Visual"
+                  $isRounded={isCircleEmblem}
+                  style={{ maxWidth: "200px" }}
+                />
+              )}
 
-              <EventTimeLoc style={{ margin: "0.5rem 0" }}>
+              <EventTimeLoc $theme={currentTheme} style={{ margin: "0.4rem 0" }}>
                 <div className="time" style={{ fontSize: "2.2rem" }}>
                   {timeString}
                 </div>
-                <div className="divider" style={{ height: "30px" }}></div>
-                <div className="date" style={{ fontSize: "0.9rem" }}>
-                  <span>
-                    {dd}.{mm}
-                  </span>
+                <div className="divider" style={{ height: "30px" }} />
+                <div className="date" style={{ fontSize: "0.95rem" }}>
+                  <span>{dd}.{mm}</span>
                   <span>{yyyy}</span>
                 </div>
               </EventTimeLoc>
-              <LocationText style={{ fontSize: "0.65rem" }}>
-                TẠI:{" "}
-                {guest.eventId?.location ||
-                  "85B, Nguyễn Văn Tư, P. Bến Tre, Vĩnh Long"}
+
+              <LocationText $theme={currentTheme} style={{ fontSize: "0.72rem" }}>
+                📍 TẠI: {eventLocation}
               </LocationText>
 
-              <ScheduleList>
-                <div className="header">
-                  Theo dõi lịch trình diễn ra sự kiện
-                </div>
-                {!isScheduleOpen && (
-                  <button
-                    type="button"
-                    className="toggle-button"
-                    aria-label="Mở lịch trình sự kiện"
-                    aria-expanded={false}
-                    onClick={() => setIsScheduleOpen(true)}
-                  >
-                    <span className="arrow arrow-down" aria-hidden="true" />
-                  </button>
-                )}
-                <div
-                  className={`schedule-items ${isScheduleOpen ? "open" : "closed"}`}
-                  aria-hidden={!isScheduleOpen}
+              {/* Realtime Event Schedule Drawer */}
+              <ScheduleList $theme={currentTheme}>
+                <div className="header">Theo dõi lịch trình diễn ra sự kiện</div>
+                <button
+                  type="button"
+                  className="toggle-button"
+                  onClick={() => setIsScheduleOpen((prev) => !prev)}
                 >
+                  <span>{isScheduleOpen ? "▲ Đóng lịch trình" : "▼ Xem lịch trình chi tiết"}</span>
+                </button>
+
+                <div className={`schedule-items ${isScheduleOpen ? "open" : "closed"}`}>
                   {(guest.eventId?.schedule?.length > 0
                     ? guest.eventId.schedule
-                    : SCHEDULE_DATA
+                    : DEFAULT_SCHEDULE
                   ).map((item, idx) => (
                     <div
                       key={idx}
                       className={`item ${item.isActive ? "active" : ""}`}
                     >
                       <div className="content-box">
-                        <div className="time">{item.time}:</div>
-                        <div className="label">{item.label}</div>
+                        <span className="time">{item.time}:</span>
+                        <span className="label">{item.label}</span>
+                        {item.isActive && <span className="live-dot" />}
                       </div>
                     </div>
                   ))}
                 </div>
-                {isScheduleOpen && (
-                  <button
-                    type="button"
-                    className="toggle-button"
-                    aria-label="Đóng lịch trình sự kiện"
-                    aria-expanded={true}
-                    onClick={() => setIsScheduleOpen(false)}
-                  >
-                    <span className="arrow arrow-up" aria-hidden="true" />
-                  </button>
-                )}
               </ScheduleList>
             </>
           )}
         </ContentWrapper>
+
+        {/* Live Organizer Preview Switcher */}
+        {isPreview && (
+          <FloatingSwitcher>
+            <span className="switcher-label">Đổi mẫu:</span>
+            {INVITATION_TEMPLATES.map((tpl) => (
+              <SwitcherPill
+                key={tpl.id}
+                type="button"
+                $active={activeTemplateId === tpl.id}
+                onClick={() => setActiveTemplateId(tpl.id)}
+                title={tpl.tagline}
+              >
+                {tpl.name}
+              </SwitcherPill>
+            ))}
+
+            <SaveTemplateBtn
+              type="button"
+              onClick={handleSaveTemplateForEvent}
+              disabled={isSavingTemplate}
+            >
+              {isSavingTemplate ? "Đang lưu…" : "💾 Lưu"}
+            </SaveTemplateBtn>
+          </FloatingSwitcher>
+        )}
       </Page>
     </OuterWrapper>
   );
